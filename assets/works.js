@@ -1,0 +1,15 @@
+window.WORKS = [
+  {id:'taketori-oitachi', work:'竹取物語', title:'かぐや姫の生ひ立ち'},
+  {id:'ise-azumakudari', work:'伊勢物語', title:'東下り（八橋）'},
+  {id:'ise-tsutsuizutsu', work:'伊勢物語', title:'筒井筒'},
+  {id:'ochikubo-tegami', work:'落窪物語', title:'日々にあらねど'},
+  {id:'makura-haruwa', work:'枕草子', title:'春はあけぼの'},
+  {id:'makura-warewoba', work:'枕草子', title:'我をば思ふや'},
+  {id:'genji-kiritsubo', work:'源氏物語', title:'いづれの御時にか'},
+  {id:'hojoki-yukukawa', work:'方丈記', title:'ゆく河の流れ'},
+  {id:'heike-gion', work:'平家物語', title:'祇園精舎'},
+  {id:'heike-ougi', work:'平家物語', title:'扇の的'},
+  {id:'tsurezure-joudan', work:'徒然草', title:'つれづれなるままに'},
+  {id:'tsurezure-ninnaji', work:'徒然草', title:'仁和寺にある法師'},
+  {id:'tamakatsuma-inaka', work:'玉勝間', title:'すべて田舎には'},
+];
