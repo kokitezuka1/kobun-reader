@@ -135,7 +135,7 @@ def work_page(w):
 
 def drill_page(w):
     return (head('%s 練習｜%s — 古文リーダー' % (w['title'], w['work']),
-                 '%s『%s』の重要語フラッシュカードと確認問題。' % (w['work'], w['title']), 'drill')
+                 '%s『%s』の重要語フラッシュカード・単語クイズ・文法問題。' % (w['work'], w['title']), 'drill')
             + '<header>\n'
               '  <a class="back" href="%s.html">← 本文へ</a>\n'
               '  %s\n'
@@ -146,15 +146,18 @@ def drill_page(w):
             + '<div class="drill-wrap">\n'
               '  <div class="drill-tabs" role="tablist">\n'
               '    <button role="tab" id="tab-card" aria-selected="true">フラッシュカード</button>\n'
-              '    <button role="tab" id="tab-quiz" aria-selected="false">確認問題</button>\n'
+              '    <button role="tab" id="tab-vocab" aria-selected="false">単語クイズ</button>\n'
+              '    <button role="tab" id="tab-quiz" aria-selected="false">文法問題</button>\n'
               '  </div>\n'
-              '  <p class="drill-note">この章段の品詞分解から自動で作られた <b id="deck-size">0</b> 枚の'
-              'カードと、毎回選び直される10問です。覚えた記録はこの端末のブラウザに残ります。</p>\n'
+              '  <p class="drill-note">この章段の品詞分解から自動で作られています。'
+              'カード <b id="deck-size">0</b> 枚、単語クイズの対象語 <b id="vocab-size">0</b> 語。'
+              'クイズは毎回10問を選び直します。覚えた記録はこの端末のブラウザに残ります。</p>\n'
               '  <div class="pane-d" id="pane-card">\n'
               '    <div class="bar" id="card-bar"></div>\n'
               '    <div class="stat" id="card-stat"></div>\n'
               '    <div id="card-box"></div>\n'
               '  </div>\n'
+              '  <div class="pane-d" id="pane-vocab" hidden><div id="vocab-box"></div></div>\n'
               '  <div class="pane-d" id="pane-quiz" hidden><div id="quiz-box"></div></div>\n'
               '</div>\n'
             + '\n<script src="assets/kit.js"></script>\n'

@@ -106,10 +106,7 @@
     if (act === 'reset') { learned = []; writeLearned(learned); newQueue(false); return; }
   });
 
-  /* ══ 確認問題 ═══════════════════════════════════════ */
-  const quizBox = document.getElementById('quiz-box');
-  let quiz = [], qi = 0, score = 0;
-
+  /* ══ 出題の共通部分 ═════════════════════════════════ */
   function others(field, val, pool, n) {
     const vals = [];
     shuffle(pool.slice()).forEach(c => {
@@ -118,101 +115,128 @@
     });
     return vals;
   }
-  function build() {
+  /* 同じ語が一回の出題で重ならないように選ぶ */
+  function draft(all, n) {
+    const used = new Set(), out = [];
+    shuffle(all).forEach(q => {
+      if (out.length >= n || used.has(q.key)) return;
+      used.add(q.key); out.push({...q, o: shuffle(q.o.slice())});
+    });
+    return out;
+  }
+
+  function Quiz(boxId, gather, emptyMsg) {
+    const box = document.getElementById(boxId);
+    let qs = [], qi = 0, score = 0, missed = [];
+
+    function build() { qs = draft(gather(), 10); qi = 0; score = 0; missed = []; }
+    function draw() {
+      if (!qs.length) { box.innerHTML = '<div class="done"><p>' + emptyMsg + '</p></div>'; return; }
+      if (qi >= qs.length) {
+        const pct = Math.round(score / qs.length * 100);
+        box.innerHTML =
+          '<div class="done"><span class="big">' + score + '/' + qs.length + '</span>' +
+          '<p>正答率 ' + pct + '％。' + (pct === 100 ? '全問正解です。' : pct >= 70 ? 'あと少しです。' : '本文に戻って確かめましょう。') + '</p>' +
+          (missed.length ? '<ul class="misslist">' + missed.map(c =>
+            '<li><span class="s">' + esc(c.s) + '</span><span class="m">' + esc(c.m) + '</span></li>').join('') + '</ul>' : '') +
+          '<div class="row2"><button class="btn" data-act="retry">別の問題でもう一度</button>' +
+          '<a class="btn ghost" href="' + WK.id + '.html">本文を読む</a></div></div>';
+        return;
+      }
+      const q = qs[qi];
+      box.innerHTML =
+        '<div class="qhead"><span class="qn">第' + (qi + 1) + '問 / ' + qs.length + '</span>' +
+        '<span class="qscore">正解 ' + score + '</span></div>' +
+        (q.ctx ? '<p class="qctx">' + esc(q.ctx) + '</p>' : '') +
+        '<h2 class="qtext">' + esc(q.q) + '</h2>' +
+        '<ul class="opts">' + q.o.map((o, i) =>
+          '<li><button class="opt' + (q.big ? ' big' : '') + '" data-i="' + i + '">' + esc(o) + '</button></li>').join('') + '</ul>' +
+        '<div class="verdict" hidden></div>';
+    }
+    box.addEventListener('click', ev => {
+      if (ev.target.closest('[data-act="retry"]')) { build(); draw(); return; }
+      const b = ev.target.closest('.opt');
+      if (!b || box.querySelector('.opt.picked')) return;
+      const q = qs[qi], chosen = q.o[+b.dataset.i], ok = chosen === q.a;
+      if (ok) score++; else missed.push(q.why);
+      box.querySelectorAll('.opt').forEach(o => {
+        o.disabled = true;
+        if (q.o[+o.dataset.i] === q.a) o.classList.add('right');
+      });
+      b.classList.add('picked', ok ? 'right' : 'wrong');
+      const c = q.why, v = box.querySelector('.verdict');
+      v.hidden = false;
+      v.className = 'verdict ' + (ok ? 'ok' : 'ng');
+      v.innerHTML =
+        '<b>' + (ok ? '正解' : '不正解') + '</b>　' + esc(c.s) +
+        (c.yomi ? '（' + esc(c.yomi) + '）' : '') +
+        '　' + esc(c.p) + (c.g ? '／' + esc(c.g) : '') + '　' + esc(c.m) +
+        (c.note ? '<div class="note">' + c.note + '</div>' : '') +
+        '<div class="row2"><button class="btn" data-act="next">次へ</button></div>';
+      v.querySelector('[data-act="next"]').onclick = () => { qi++; draw(); };
+    });
+    return {build, draw, ensure() { if (!qs.length || qi >= qs.length) { build(); draw(); } }};
+  }
+
+  /* ══ 単語クイズ（語義・読み） ═══════════════════════ */
+  const vocab = cards.filter(c => c.c === 'v' || c.c === 'adj' || c.c === 'n' || c.c === 'o');
+  function vocabQs() {
     const qs = [];
-    const aux = cards.filter(c => c.c === 'aux');
+    vocab.forEach(c => {
+      let d = others('m', c.m, vocab, 3);
+      if (d.length === 3) qs.push({key: c.key, q: '「' + c.s + '」の意味は？', ctx: c.ctx, a: c.m, o: d.concat([c.m]), why: c});
+      d = others('s', c.s, vocab, 3);
+      if (d.length === 3) qs.push({key: c.key, q: '「' + c.m + '」にあたる語は？', ctx: '', a: c.s, o: d.concat([c.s]), why: c, big: true});
+      if (c.yomi) {
+        d = others('yomi', c.yomi, vocab.filter(x => x.yomi), 3);
+        if (d.length === 3) qs.push({key: c.key, q: '「' + c.s + '」の読みは？', ctx: c.ctx, a: c.yomi, o: d.concat([c.yomi]), why: c});
+      }
+    });
+    return qs;
+  }
+  const vq = Quiz('vocab-box', vocabQs, 'この章段では単語の問題を作れませんでした。');
+
+  /* ══ 文法問題（品詞・活用・助動詞・敬語） ═══════════ */
+  const auxes = cards.filter(c => c.c === 'aux');
+  function grammarQs() {
+    const qs = [];
     cards.forEach(c => {
       const same = cards.filter(x => x.c === c.c);
-      // 意味
-      let d = others('m', c.m, same.length > 6 ? same : cards, 3);
-      if (d.length === 3) qs.push({q: '「' + c.s + '」の意味として最も適切なものは？', ctx: c.ctx, a: c.m, o: d.concat([c.m]), why: c});
-      // 品詞
-      d = others('p', c.p, cards, 3);
-      if (d.length === 3) qs.push({q: '「' + c.s + '」の品詞は？', ctx: c.ctx, a: c.p, o: d.concat([c.p]), why: c});
-      // 活用・種類
+      let d = others('p', c.p, cards, 3);
+      if (d.length === 3) qs.push({key: c.key, q: '「' + c.s + '」の品詞は？', ctx: c.ctx, a: c.p, o: d.concat([c.p]), why: c});
       if (c.g && (c.c === 'v' || c.c === 'adj')) {
         d = others('g', c.g, same, 3);
-        if (d.length === 3) qs.push({q: '「' + c.s + '」の活用の種類と活用形は？', ctx: c.ctx, a: c.g, o: d.concat([c.g]), why: c});
+        if (d.length === 3) qs.push({key: c.key, q: '「' + c.s + '」の活用の種類と活用形は？', ctx: c.ctx, a: c.g, o: d.concat([c.g]), why: c});
       }
-      // 助動詞
-      if (c.c === 'aux' && c.g && aux.length > 4) {
-        d = others('g', c.g, aux, 3);
-        if (d.length === 3) qs.push({q: '助動詞「' + c.s + '」の説明として正しいものは？', ctx: c.ctx, a: c.g, o: d.concat([c.g]), why: c});
+      if (c.c === 'aux' && c.g && auxes.length > 4) {
+        d = others('g', c.g, auxes, 3);
+        if (d.length === 3) qs.push({key: c.key, q: '助動詞「' + c.s + '」の説明として正しいものは？', ctx: c.ctx, a: c.g, o: d.concat([c.g]), why: c});
       }
-      // 読み
-      if (c.yomi) {
-        d = others('yomi', c.yomi, cards.filter(x => x.yomi), 3);
-        if (d.length === 3) qs.push({q: '「' + c.s + '」の読みは？', ctx: c.ctx, a: c.yomi, o: d.concat([c.yomi]), why: c});
-      }
-      // 敬語
-      if (c.kei) {
-        const all = ['尊敬語', '謙譲語', '丁寧語', '敬語ではない'];
-        qs.push({q: '「' + c.s + '」の敬語の種類は？', ctx: c.ctx, a: c.kei + '語', o: all, why: c});
-      }
+      if (c.kei) qs.push({key: c.key, q: '「' + c.s + '」の敬語の種類は？', ctx: c.ctx, a: c.kei + '語',
+                          o: ['尊敬語', '謙譲語', '丁寧語', '敬語ではない'], why: c});
     });
-    quiz = shuffle(qs).slice(0, 10).map(q => ({...q, o: shuffle(q.o.slice())}));
-    qi = 0; score = 0;
+    return qs;
   }
-  function drawQuiz() {
-    if (!quiz.length) { quizBox.innerHTML = '<div class="done"><p>この章段では問題を作れませんでした。</p></div>'; return; }
-    if (qi >= quiz.length) {
-      const pct = Math.round(score / quiz.length * 100);
-      quizBox.innerHTML =
-        '<div class="done"><span class="big">' + score + '/' + quiz.length + '</span>' +
-        '<p>正答率 ' + pct + '％。' + (pct === 100 ? '全問正解です。' : pct >= 70 ? 'あと少しです。' : '本文に戻って確かめましょう。') + '</p>' +
-        '<div class="row2"><button class="btn" data-act="retry">別の問題でもう一度</button>' +
-        '<a class="btn ghost" href="' + WK.id + '.html">本文を読む</a></div></div>';
-      return;
-    }
-    const q = quiz[qi];
-    quizBox.innerHTML =
-      '<div class="qhead"><span class="qn">第' + (qi + 1) + '問 / ' + quiz.length + '</span>' +
-      '<span class="qscore">正解 ' + score + '</span></div>' +
-      '<p class="qctx">' + esc(q.ctx) + '</p>' +
-      '<h2 class="qtext">' + esc(q.q) + '</h2>' +
-      '<ul class="opts">' + q.o.map((o, i) =>
-        '<li><button class="opt" data-i="' + i + '">' + esc(o) + '</button></li>').join('') + '</ul>' +
-      '<div class="verdict" hidden></div>';
-  }
-  quizBox.addEventListener('click', e => {
-    const r = e.target.closest('[data-act="retry"]');
-    if (r) { build(); drawQuiz(); return; }
-    const b = e.target.closest('.opt');
-    if (!b || quizBox.querySelector('.opt.picked')) return;
-    const q = quiz[qi];
-    const chosen = q.o[+b.dataset.i];
-    const ok = chosen === q.a;
-    if (ok) score++;
-    quizBox.querySelectorAll('.opt').forEach(o => {
-      o.disabled = true;
-      if (q.o[+o.dataset.i] === q.a) o.classList.add('right');
-    });
-    b.classList.add('picked', ok ? 'right' : 'wrong');
-    const v = quizBox.querySelector('.verdict');
-    const c = q.why;
-    v.hidden = false;
-    v.className = 'verdict ' + (ok ? 'ok' : 'ng');
-    v.innerHTML =
-      '<b>' + (ok ? '正解' : '不正解') + '</b>　' + esc(c.s) +
-      '（' + esc(c.p) + (c.g ? '／' + esc(c.g) : '') + '）' + esc(c.m) +
-      (c.note ? '<div class="note">' + c.note + '</div>' : '') +
-      '<div class="row2"><button class="btn" data-act="next">次へ</button></div>';
-    v.querySelector('[data-act="next"]').onclick = () => { qi++; drawQuiz(); };
-  });
+  const gq = Quiz('quiz-box', grammarQs, 'この章段では文法の問題を作れませんでした。');
 
   /* ══ モード切り替え ═════════════════════════════════ */
+  const MODES = {card: 'tab-card', vocab: 'tab-vocab', quiz: 'tab-quiz'};
   function show(mode) {
-    const card = mode === 'card';
-    document.getElementById('tab-card').setAttribute('aria-selected', card);
-    document.getElementById('tab-quiz').setAttribute('aria-selected', !card);
-    document.getElementById('pane-card').hidden = !card;
-    document.getElementById('pane-quiz').hidden = card;
+    Object.keys(MODES).forEach(k => {
+      document.getElementById(MODES[k]).setAttribute('aria-selected', k === mode);
+      document.getElementById('pane-' + k).hidden = k !== mode;
+    });
+    if (mode === 'vocab') vq.ensure();
+    if (mode === 'quiz') gq.ensure();
   }
-  document.getElementById('tab-card').onclick = () => show('card');
-  document.getElementById('tab-quiz').onclick = () => { show('quiz'); if (!quiz.length || qi >= quiz.length) { build(); drawQuiz(); } };
+  document.getElementById('tab-card').onclick  = () => show('card');
+  document.getElementById('tab-vocab').onclick = () => show('vocab');
+  document.getElementById('tab-quiz').onclick  = () => show('quiz');
 
   document.getElementById('deck-size').textContent = cards.length;
+  document.getElementById('vocab-size').textContent = vocab.length;
   newQueue(true);
-  build(); drawQuiz();
+  vq.build(); vq.draw();
+  gq.build(); gq.draw();
   show('card');
 })();
