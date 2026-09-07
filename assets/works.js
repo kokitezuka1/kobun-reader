@@ -12,4 +12,6 @@ window.WORKS = [
   {id:'tsurezure-joudan', work:'徒然草', title:'つれづれなるままに'},
   {id:'tsurezure-ninnaji', work:'徒然草', title:'仁和寺にある法師'},
   {id:'tamakatsuma-inaka', work:'玉勝間', title:'すべて田舎には'},
+  {id:'shiki-koumon', work:'史記', title:'鴻門之会'},
 ];
+window.DEFAULT_FAVORITES = ['ochikubo-tegami', 'makura-haruwa', 'makura-warewoba', 'genji-kiritsubo', 'tamakatsuma-inaka'];

@@ -15,11 +15,13 @@
 <body>
 <header>
   <a class="back" href="index.html">← 作品一覧</a>
+  <button class="star" data-fav-id="heike-ougi" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
   <div class="brand">
     <h1>扇の的</h1>
     <span class="work">平家物語・巻第十一 那須与一</span>
     <span class="src">「ころは二月十八日の」〜「箙をたたいてどよめきけり。」</span>
   </div>
+  <a class="back" href="heike-ougi-drill.html">練習 →</a>
   <div class="tools">
     <div class="grp" id="hlchips">
       <span class="lab">品詞を強調</span>
@@ -33,6 +35,7 @@
     <div class="grp">
       <button class="chip kei" id="keiBtn" aria-pressed="true"><span class="dot"></span>敬語に圏点</button>
       <button class="chip plain" id="colorBtn" aria-pressed="true">品詞で色分け</button>
+      <button class="chip plain" id="hakuBtn" aria-pressed="false">白文</button>
       <button class="chip plain" id="yakuBtn" aria-pressed="false">現代語訳</button>
     </div>
     <div class="grp">
@@ -63,6 +66,7 @@
 
 <script src="assets/kit.js"></script>
 <script src="assets/works.js"></script>
+<script src="assets/favorites.js"></script>
 <script src="texts/heike-ougi.js"></script>
 <script src="assets/reader.js"></script>
 </body>

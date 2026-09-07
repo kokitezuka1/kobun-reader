@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="古文の名文を縦書きで読み、語をクリックすると品詞・活用・意味が引ける学習サイト。">
+<meta name="description" content="古文・漢文の名文を縦書きで読み、語をクリックすると品詞・活用・意味が引ける学習サイト。">
 <title>古文リーダー</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' x='4' font-size='26'>%F0%9F%93%9C</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,18 +17,24 @@
 <div class="hero">
   <p class="eyebrow">縦書きで読む・語をひらいて確かめる</p>
   <h1>古文リーダー</h1>
-  <p>教科書でおなじみの章段を、原文のまま縦書きで並べました。語をクリックすると品詞・活用の種類と活用形・意味が出ます。助動詞だけを浮かび上がらせたり、敬語に圏点を打ったり、現代語訳を隣に立てたりしながら読み進められます。</p>
+  <p>教科書でおなじみの章段を、原文のまま縦書きで並べました。語をクリックすると品詞・活用の種類と活用形・意味が出ます。助動詞だけを浮かび上がらせたり、敬語に圏点を打ったり、現代語訳を隣に立てたりしながら読み進められます。章段ごとにフラッシュカードと確認問題も用意しました。</p>
   <div class="counts">
-    <div><b>13</b>章段</div>
-    <div><b>9</b>作品</div>
-    <div><b>2,286</b>語を品詞分解</div>
-    <div><b>258</b>語の助動詞</div>
+    <div><b>14</b>章段</div>
+    <div><b>10</b>作品</div>
+    <div><b>3,248</b>語を品詞分解</div>
+    <div><b>321</b>語の助動詞</div>
   </div>
 </div>
+<section class="genre shelf">
+  <h2>お気に入り<span class="n" id="fav-count">0</span></h2>
+  <div class="cards" id="fav-cards" hidden></div>
+  <div class="fav-empty" id="fav-empty" hidden>カードの<button class="star" aria-pressed="true" tabindex="-1">★</button>を押すと、ここによく読む章段が並びます。</div>
+</section>
 <section class="genre">
   <h2>物語・歌物語</h2>
   <div class="cards">
-    <a class="card" href="taketori-oitachi.html">
+    <a class="card" href="taketori-oitachi.html" data-id="taketori-oitachi">
+      <button class="star" data-fav-id="taketori-oitachi" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">竹取物語</span>
       <span class="meat">
         <h3>かぐや姫の生ひ立ち</h3>
@@ -37,7 +43,8 @@
         <span class="stats"><span>冒頭</span><span>122語</span><span class="aux">助動詞14</span></span>
       </span>
     </a>
-    <a class="card" href="ise-azumakudari.html">
+    <a class="card" href="ise-azumakudari.html" data-id="ise-azumakudari">
+      <button class="star" data-fav-id="ise-azumakudari" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">伊勢物語</span>
       <span class="meat">
         <h3>東下り（八橋）</h3>
@@ -46,7 +53,8 @@
         <span class="stats"><span>第九段</span><span>170語</span><span class="aux">助動詞23</span></span>
       </span>
     </a>
-    <a class="card" href="ise-tsutsuizutsu.html">
+    <a class="card" href="ise-tsutsuizutsu.html" data-id="ise-tsutsuizutsu">
+      <button class="star" data-fav-id="ise-tsutsuizutsu" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">伊勢物語</span>
       <span class="meat">
         <h3>筒井筒</h3>
@@ -55,7 +63,8 @@
         <span class="stats"><span>第二十三段（前半）</span><span>114語</span><span class="aux">助動詞19</span></span>
       </span>
     </a>
-    <a class="card" href="ochikubo-tegami.html">
+    <a class="card" href="ochikubo-tegami.html" data-id="ochikubo-tegami">
+      <button class="star" data-fav-id="ochikubo-tegami" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">落窪物語</span>
       <span class="meat">
         <h3>日々にあらねど</h3>
@@ -64,7 +73,8 @@
         <span class="stats"><span>巻一・少将の懸想文</span><span>203語</span><span class="aux">助動詞25</span></span>
       </span>
     </a>
-    <a class="card" href="genji-kiritsubo.html">
+    <a class="card" href="genji-kiritsubo.html" data-id="genji-kiritsubo">
+      <button class="star" data-fav-id="genji-kiritsubo" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">源氏物語</span>
       <span class="meat">
         <h3>いづれの御時にか</h3>
@@ -78,7 +88,8 @@
 <section class="genre">
   <h2>随筆</h2>
   <div class="cards">
-    <a class="card" href="makura-haruwa.html">
+    <a class="card" href="makura-haruwa.html" data-id="makura-haruwa">
+      <button class="star" data-fav-id="makura-haruwa" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">枕草子</span>
       <span class="meat">
         <h3>春はあけぼの</h3>
@@ -87,7 +98,8 @@
         <span class="stats"><span>第一段</span><span>156語</span><span class="aux">助動詞12</span></span>
       </span>
     </a>
-    <a class="card" href="makura-warewoba.html">
+    <a class="card" href="makura-warewoba.html" data-id="makura-warewoba">
+      <button class="star" data-fav-id="makura-warewoba" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">枕草子</span>
       <span class="meat">
         <h3>我をば思ふや</h3>
@@ -96,7 +108,8 @@
         <span class="stats"><span>中宮定子との贈答</span><span>203語</span><span class="aux">助動詞22</span></span>
       </span>
     </a>
-    <a class="card" href="hojoki-yukukawa.html">
+    <a class="card" href="hojoki-yukukawa.html" data-id="hojoki-yukukawa">
+      <button class="star" data-fav-id="hojoki-yukukawa" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">方丈記</span>
       <span class="meat">
         <h3>ゆく河の流れ</h3>
@@ -105,7 +118,8 @@
         <span class="stats"><span>冒頭</span><span>221語</span><span class="aux">助動詞23</span></span>
       </span>
     </a>
-    <a class="card" href="tsurezure-joudan.html">
+    <a class="card" href="tsurezure-joudan.html" data-id="tsurezure-joudan">
+      <button class="star" data-fav-id="tsurezure-joudan" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">徒然草</span>
       <span class="meat">
         <h3>つれづれなるままに</h3>
@@ -114,7 +128,8 @@
         <span class="stats"><span>序段</span><span>19語</span><span class="aux">助動詞0</span></span>
       </span>
     </a>
-    <a class="card" href="tsurezure-ninnaji.html">
+    <a class="card" href="tsurezure-ninnaji.html" data-id="tsurezure-ninnaji">
+      <button class="star" data-fav-id="tsurezure-ninnaji" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">徒然草</span>
       <span class="meat">
         <h3>仁和寺にある法師</h3>
@@ -123,7 +138,8 @@
         <span class="stats"><span>第五十二段</span><span>108語</span><span class="aux">助動詞18</span></span>
       </span>
     </a>
-    <a class="card" href="tamakatsuma-inaka.html">
+    <a class="card" href="tamakatsuma-inaka.html" data-id="tamakatsuma-inaka">
+      <button class="star" data-fav-id="tamakatsuma-inaka" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">玉勝間</span>
       <span class="meat">
         <h3>すべて田舎には</h3>
@@ -137,7 +153,8 @@
 <section class="genre">
   <h2>軍記物語</h2>
   <div class="cards">
-    <a class="card" href="heike-gion.html">
+    <a class="card" href="heike-gion.html" data-id="heike-gion">
+      <button class="star" data-fav-id="heike-gion" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">平家物語</span>
       <span class="meat">
         <h3>祇園精舎</h3>
@@ -146,7 +163,8 @@
         <span class="stats"><span>巻第一 冒頭</span><span>163語</span><span class="aux">助動詞19</span></span>
       </span>
     </a>
-    <a class="card" href="heike-ougi.html">
+    <a class="card" href="heike-ougi.html" data-id="heike-ougi">
+      <button class="star" data-fav-id="heike-ougi" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
       <span class="spine">平家物語</span>
       <span class="meat">
         <h3>扇の的</h3>
@@ -157,10 +175,29 @@
     </a>
   </div>
 </section>
+<section class="genre">
+  <h2>漢文</h2>
+  <div class="cards">
+    <a class="card" href="shiki-koumon.html" data-id="shiki-koumon">
+      <button class="star" data-fav-id="shiki-koumon" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
+      <span class="spine">史記</span>
+      <span class="meat">
+        <h3>鴻門之会</h3>
+        <span class="by">司馬遷／前漢・前九一年頃</span>
+        <p class="lede">項羽の陣に出向いた劉邦。剣舞、樊噲の乱入、そして脱出。天下の行方を決めた一夜の宴。</p>
+        <span class="stats"><span>項羽本紀</span><span>962語</span><span class="aux">助動詞63</span></span>
+      </span>
+    </a>
+  </div>
+</section>
 <div class="home-foot">
   本文は著作権の切れた古典作品。品詞分解・現代語訳・語法メモは学校文法（古典文法）に沿って書き起こしたものです。<br>
+  お気に入りと学習の記録は、この端末のブラウザにだけ保存されます。<br>
   章段を足すときは <code>texts/</code> に .js を置いて <code>python3 build.py</code> を実行してください。
 </div>
 </div>
+<script src="assets/works.js"></script>
+<script src="assets/favorites.js"></script>
+<script src="assets/index.js"></script>
 </body>
 </html>

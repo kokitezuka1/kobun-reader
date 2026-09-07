@@ -39,6 +39,14 @@
     });
     sec.appendChild(body);
 
+    if (dan.k) {
+      const hk = document.createElement('div');
+      hk.className = 'hakubun';
+      hk.innerHTML = '<span class="tag">白文</span>';
+      hk.appendChild(document.createTextNode(dan.k));
+      sec.appendChild(hk);
+    }
+
     const yaku = document.createElement('div');
     yaku.className = 'yaku';
     yaku.innerHTML = '<span class="tag">現代語訳</span>';
@@ -192,6 +200,19 @@
   };
   toggle('colorBtn', 'data-color', textEl, true);
   toggle('keiBtn',   'data-kei',   textEl, true);
+
+  /* 白文は漢文の章段にだけ出す */
+  const hakuBtn = document.getElementById('hakuBtn');
+  if (DAN.some(d => d.k)) {
+    let hakuOn = false;
+    const applyHaku = () => { hakuBtn.setAttribute('aria-pressed', hakuOn); document.body.dataset.haku = hakuOn ? 'on' : 'off'; };
+    hakuBtn.onclick = () => { hakuOn = !hakuOn; applyHaku(); };
+    applyHaku();
+  } else {
+    hakuBtn.hidden = true;
+  }
+
+
 
   const yb = document.getElementById('yakuBtn');
   let yakuOn = false;

@@ -15,11 +15,13 @@
 <body>
 <header>
   <a class="back" href="index.html">← 作品一覧</a>
+  <button class="star" data-fav-id="genji-kiritsubo" aria-pressed="false" aria-label="お気に入りに入れる">★</button>
   <div class="brand">
     <h1>いづれの御時にか</h1>
     <span class="work">源氏物語・巻一 桐壺</span>
     <span class="src">「いづれの御時にか」〜「思ほしかしづき給ふこと限りなし。」</span>
   </div>
+  <a class="back" href="genji-kiritsubo-drill.html">練習 →</a>
   <div class="tools">
     <div class="grp" id="hlchips">
       <span class="lab">品詞を強調</span>
@@ -33,6 +35,7 @@
     <div class="grp">
       <button class="chip kei" id="keiBtn" aria-pressed="true"><span class="dot"></span>敬語に圏点</button>
       <button class="chip plain" id="colorBtn" aria-pressed="true">品詞で色分け</button>
+      <button class="chip plain" id="hakuBtn" aria-pressed="false">白文</button>
       <button class="chip plain" id="yakuBtn" aria-pressed="false">現代語訳</button>
     </div>
     <div class="grp">
@@ -63,6 +66,7 @@
 
 <script src="assets/kit.js"></script>
 <script src="assets/works.js"></script>
+<script src="assets/favorites.js"></script>
 <script src="texts/genji-kiritsubo.js"></script>
 <script src="assets/reader.js"></script>
 </body>
