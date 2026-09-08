@@ -79,10 +79,12 @@ CONTROLS = '''  <div class="tools">
       <button class="chip pt" data-hl="pt" aria-pressed="false"><span class="dot"></span>助詞</button>
       <button class="chip n" data-hl="n" aria-pressed="false"><span class="dot"></span>名詞</button>
       <button class="chip o" data-hl="o" aria-pressed="false"><span class="dot"></span>その他</button>
+      <button class="chip imp" data-hl="imp" aria-pressed="false"><span class="dot"></span>要チェック</button>
     </div>
     <div class="grp">
       <button class="chip kei" id="keiBtn" aria-pressed="true"><span class="dot"></span>敬語に圏点</button>
       <button class="chip plain" id="colorBtn" aria-pressed="true">品詞で色分け</button>
+      <button class="chip plain" id="rubyBtn" aria-pressed="false">読み仮名</button>
       <button class="chip plain" id="hakuBtn" aria-pressed="false">白文</button>
       <button class="chip plain" id="yakuBtn" aria-pressed="false">現代語訳</button>
     </div>
@@ -100,13 +102,15 @@ PANEL = '''<main>
   <aside>
     <div class="tabs" role="tablist">
       <button role="tab" id="tab-w" aria-selected="true" aria-controls="pane-w">語　釈</button>
-      <button role="tab" id="tab-a" aria-selected="false" aria-controls="pane-a">助動詞一覧</button>
+      <button role="tab" id="tab-a" aria-selected="false" aria-controls="pane-a">助動詞</button>
+      <button role="tab" id="tab-k" aria-selected="false" aria-controls="pane-k">句　法</button>
     </div>
     <div class="pane" id="pane-w" role="tabpanel" aria-labelledby="tab-w"></div>
     <div class="pane" id="pane-a" role="tabpanel" aria-labelledby="tab-a" hidden></div>
+    <div class="pane" id="pane-k" role="tabpanel" aria-labelledby="tab-k" hidden></div>
     <div class="legend">
       本文の語をクリック／タップすると品詞・活用・意味が出ます。<br>
-      <span class="sesame">圏点</span>は敬語（尊敬・謙譲・丁寧）。矢印キーで前後の語へ移動。
+      <span class="sesame">圏点</span>は敬語、<span class="kuline">下線</span>は句法。矢印キーで前後の語へ移動。
     </div>
   </aside>
   <div id="scroll"><div id="text"></div></div>
@@ -152,6 +156,10 @@ def drill_page(w):
               '  <p class="drill-note">この章段の品詞分解から自動で作られています。'
               'カード <b id="deck-size">0</b> 枚、単語クイズの対象語 <b id="vocab-size">0</b> 語。'
               'クイズは毎回10問を選び直します。覚えた記録はこの端末のブラウザに残ります。</p>\n'
+              '  <div class="scope" id="scope" role="group" aria-label="出題の範囲">\n'
+              '    <button data-scope="all" aria-pressed="true">すべての語</button>\n'
+              '    <button data-scope="imp" aria-pressed="false">要チェックのみ</button>\n'
+              '  </div>\n'
               '  <div class="pane-d" id="pane-card">\n'
               '    <div class="bar" id="card-bar"></div>\n'
               '    <div class="stat" id="card-stat"></div>\n'

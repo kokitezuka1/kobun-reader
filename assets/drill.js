@@ -26,10 +26,14 @@
     if (seen.has(key)) return;
     seen.add(key);
     cards.push({key, s: tk.s, c: tk.c, p: tk.p, g: tk.g || '', m: tk.m,
-                yomi: tk.yomi || '', kei: tk.kei || '', note: tk.note || '',
+                yomi: tk.yomi || '', kei: tk.kei || '', note: tk.note || '', ku: tk.ku || '',
+                imp: !!(tk.ku || tk.kei || tk.note || tk.c === 'aux' || (tk.c === 'n' && tk.yomi)),
                 dan: WK.dan.length > 1 ? '第' + d.n + '段' : (d.n || '本文'),
                 ctx: around(d.t, i)});
   }));
+
+  let scope = 'all';
+  const pool = () => scope === 'all' ? cards : cards.filter(c => c.imp);
 
   const LKEY = 'kobun:learned:' + WK.id;
   function readLearned() {
@@ -48,20 +52,21 @@
   let queue = [], face = 0;
 
   function newQueue(onlyUnlearned) {
-    const base = onlyUnlearned ? cards.filter(c => learned.indexOf(c.key) < 0) : cards.slice();
+    const base = onlyUnlearned ? pool().filter(c => learned.indexOf(c.key) < 0) : pool().slice();
     queue = shuffle(base);
     face = 0;
     drawCard();
   }
   function drawCard() {
-    const total = cards.length, done = learned.length;
+    const inPool = pool();
+    const total = inPool.length, done = inPool.filter(c => learned.indexOf(c.key) >= 0).length;
     cardStat.textContent = '覚えた ' + done + ' / ' + total + '　残り ' + queue.length + '枚';
     cardBar.style.setProperty('--p', total ? (done / total * 100) + '%' : '0%');
     if (!queue.length) {
       cardBox.innerHTML =
         '<div class="done"><span class="big">了</span>' +
-        '<p>この山は終わりました。' + (learned.length >= cards.length
-          ? 'すべて覚えた状態です。' : 'まだ覚えていない語が ' + (cards.length - learned.length) + ' 語あります。') + '</p>' +
+        '<p>この山は終わりました。' + (done >= total
+          ? 'この範囲はすべて覚えた状態です。' : 'まだ覚えていない語が ' + (total - done) + ' 語あります。') + '</p>' +
         '<div class="row2"><button class="btn" data-act="again">覚えていない語をもう一周</button>' +
         '<button class="btn ghost" data-act="all">全部の語をもう一周</button>' +
         '<button class="btn ghost" data-act="reset">学習状況をリセット</button></div></div>';
@@ -118,11 +123,13 @@
   /* 同じ語が一回の出題で重ならないように選ぶ */
   function draft(all, n) {
     const used = new Set(), out = [];
-    shuffle(all).forEach(q => {
-      if (out.length >= n || used.has(q.key)) return;
+    const take = (list, limit) => shuffle(list).forEach(q => {
+      if (out.length >= limit || used.has(q.key)) return;
       used.add(q.key); out.push({...q, o: shuffle(q.o.slice())});
     });
-    return out;
+    take(all.filter(q => q.pri), Math.min(4, n));   // 句法は必ず何問か入れる
+    take(all, n);
+    return shuffle(out);
   }
 
   function Quiz(boxId, gather, emptyMsg) {
@@ -170,7 +177,8 @@
       v.innerHTML =
         '<b>' + (ok ? '正解' : '不正解') + '</b>　' + esc(c.s) +
         (c.yomi ? '（' + esc(c.yomi) + '）' : '') +
-        '　' + esc(c.p) + (c.g ? '／' + esc(c.g) : '') + '　' + esc(c.m) +
+        '　' + esc(c.p) + (c.g ? '／' + esc(c.g) : '') +
+        (c.ku ? '　<span class="kuinline">句法・' + esc(c.ku) + '</span>' : '') + '　' + esc(c.m) +
         (c.note ? '<div class="note">' + c.note + '</div>' : '') +
         '<div class="row2"><button class="btn" data-act="next">次へ</button></div>';
       v.querySelector('[data-act="next"]').onclick = () => { qi++; draw(); };
@@ -179,9 +187,9 @@
   }
 
   /* ══ 単語クイズ（語義・読み） ═══════════════════════ */
-  const vocab = cards.filter(c => c.c === 'v' || c.c === 'adj' || c.c === 'n' || c.c === 'o');
+  const isVocab = c => c.c === 'v' || c.c === 'adj' || c.c === 'n' || c.c === 'o';
   function vocabQs() {
-    const qs = [];
+    const qs = [], vocab = pool().filter(isVocab);
     vocab.forEach(c => {
       let d = others('m', c.m, vocab, 3);
       if (d.length === 3) qs.push({key: c.key, q: '「' + c.s + '」の意味は？', ctx: c.ctx, a: c.m, o: d.concat([c.m]), why: c});
@@ -197,12 +205,18 @@
   const vq = Quiz('vocab-box', vocabQs, 'この章段では単語の問題を作れませんでした。');
 
   /* ══ 文法問題（品詞・活用・助動詞・敬語） ═══════════ */
-  const auxes = cards.filter(c => c.c === 'aux');
+  const KU_ALL = ['再読文字', '使役', '受身', '反語', '疑問', '抑揚', '限定',
+                  '比況', '仮定', '願望', '否定', '不可能', 'ク語法'];
   function grammarQs() {
-    const qs = [];
-    cards.forEach(c => {
-      const same = cards.filter(x => x.c === c.c);
-      let d = others('p', c.p, cards, 3);
+    const qs = [], all = pool(), auxes = all.filter(c => c.c === 'aux');
+    all.forEach(c => {
+      const same = all.filter(x => x.c === c.c);
+      if (c.ku) {
+        const d = shuffle(KU_ALL.filter(k => k !== c.ku)).slice(0, 3);
+        qs.push({key: c.key, q: '「' + c.s + '」に使われている句法は？', ctx: c.ctx,
+                 a: c.ku, o: d.concat([c.ku]), why: c, pri: true});
+      }
+      let d = others('p', c.p, all, 3);
       if (d.length === 3) qs.push({key: c.key, q: '「' + c.s + '」の品詞は？', ctx: c.ctx, a: c.p, o: d.concat([c.p]), why: c});
       if (c.g && (c.c === 'v' || c.c === 'adj')) {
         d = others('g', c.g, same, 3);
@@ -233,8 +247,26 @@
   document.getElementById('tab-vocab').onclick = () => show('vocab');
   document.getElementById('tab-quiz').onclick  = () => show('quiz');
 
-  document.getElementById('deck-size').textContent = cards.length;
-  document.getElementById('vocab-size').textContent = vocab.length;
+  const sizes = () => {
+    document.getElementById('deck-size').textContent = pool().length;
+    document.getElementById('vocab-size').textContent = pool().filter(isVocab).length;
+  };
+  const scopeBox = document.getElementById('scope');
+  const impCount = cards.filter(c => c.imp).length;
+  if (impCount && impCount < cards.length) {
+    scopeBox.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-scope]');
+      if (!b || b.dataset.scope === scope) return;
+      scope = b.dataset.scope;
+      scopeBox.querySelectorAll('[data-scope]').forEach(x =>
+        x.setAttribute('aria-pressed', x.dataset.scope === scope));
+      sizes(); newQueue(true);
+      vq.build(); vq.draw(); gq.build(); gq.draw();
+    });
+  } else {
+    scopeBox.hidden = true;
+  }
+  sizes();
   newQueue(true);
   vq.build(); vq.draw();
   gq.build(); gq.draw();

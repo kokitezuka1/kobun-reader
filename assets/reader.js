@@ -3,7 +3,13 @@
   const textEl = document.getElementById('text');
   const paneW  = document.getElementById('pane-w');
   const paneA  = document.getElementById('pane-a');
+  const paneK  = document.getElementById('pane-k');
   const DAN    = WORK.dan;
+  const KANBUN = WORK.genre === '漢文';
+  const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+  /* 押さえておきたい語かどうか（自動判定） */
+  const isImp = t => !!(t.ku || t.kei || t.note || t.c === 'aux' || (t.c === 'n' && t.yomi));
 
   /* ── 本文を組む ─────────────────────── */
   const flat = [];            // クリック可能な語だけを通し番号で保持
@@ -17,35 +23,37 @@
     mark.textContent = DAN.length > 1 ? '第' + dan.n + '段' : (dan.n || '本文');
     sec.appendChild(mark);
 
+    const haku = document.createElement('div');
+    if (dan.k) {
+      haku.className = 'hakubun';
+      haku.innerHTML = '<span class="tag">白文</span>';
+      haku.appendChild(document.createTextNode(dan.k));
+      if (KANBUN) sec.appendChild(haku);   // 漢文は白文を先に置く
+    }
+
     const body = document.createElement('div');
     body.className = 'body';
-    dan.t.forEach(tk => {
+    dan.t.forEach((tk, i) => {
       if (tk.c === 'br') { body.appendChild(document.createElement('br')); return; }
       const el = document.createElement('span');
       if (tk.c === 'pn') {
         el.className = 'pn'; el.textContent = tk.s; body.appendChild(el);
         seq.push({s: tk.s, i: -1}); return;
       }
-      const i = flat.length;
-      seq.push({s: tk.s, i});
-      el.className = 'w ' + tk.c + (tk.kei ? ' kei' : '');
-      el.textContent = tk.s;
-      el.dataset.i = i;
+      const n = flat.length;
+      seq.push({s: tk.s, i: n});
+      el.className = 'w ' + tk.c + (tk.kei ? ' kei' : '') + (tk.ku ? ' ku' : '') + (isImp(tk) ? ' imp' : '');
+      if (tk.yomi) el.innerHTML = '<ruby>' + esc(tk.s) + '<rt>' + esc(tk.yomi) + '</rt></ruby>';
+      else el.textContent = tk.s;
+      el.dataset.i = n;
       el.setAttribute('role', 'button');
-      el.setAttribute('tabindex', i === 0 ? '0' : '-1');
+      el.setAttribute('tabindex', n === 0 ? '0' : '-1');
       el.setAttribute('aria-label', tk.s + '　' + tk.p);
       body.appendChild(el);
       flat.push({tk, el, dan: dan.n});
     });
     sec.appendChild(body);
-
-    if (dan.k) {
-      const hk = document.createElement('div');
-      hk.className = 'hakubun';
-      hk.innerHTML = '<span class="tag">白文</span>';
-      hk.appendChild(document.createTextNode(dan.k));
-      sec.appendChild(hk);
-    }
+    if (dan.k && !KANBUN) sec.appendChild(haku);
 
     const yaku = document.createElement('div');
     yaku.className = 'yaku';
@@ -72,7 +80,6 @@
 
   /* ── 語釈パネル ─────────────────────── */
   let cur = -1;
-  const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
   function context(i){
     const at = seq.findIndex(o => o.i === i);
@@ -89,7 +96,7 @@
     paneW.innerHTML =
       '<div class="empty"><span class="k">語</span>' +
       '本文の語をクリックすると、ここに品詞・活用・意味・語法のメモが表示されます。<br><br>' +
-      'まずは<b>助動詞</b>から追うと、' + esc(WORK.hint || 'この文章の語り口') + 'がつかめます。</div>';
+      'まずは<b>' + (KANBUN ? '句法' : '助動詞') + '</b>から追うと、' + esc(WORK.hint || 'この文章の語り口') + 'がつかめます。</div>';
   }
 
   function select(i, scroll){
@@ -106,6 +113,7 @@
     if (tk.yomi) h += '<span class="yomi">' + esc(tk.yomi) + '</span>';
     h += '</div>';
     h += '<span class="pos ' + tk.c + '">' + esc(tk.p) + '</span>';
+    if (tk.ku) h += '<span class="kutag">句法・' + esc(tk.ku) + '</span>';
     h += '<dl class="row">';
     if (tk.g) h += '<dt>活用・種類</dt><dd>' + esc(tk.g) + '</dd>';
     h += '<dt>意味</dt><dd><span class="mean">' + esc(tk.m) + '</span></dd>';
@@ -118,35 +126,34 @@
     paneW.innerHTML = h;
     paneW.scrollTop = 0;
 
-    paneA.querySelectorAll('button.on').forEach(b => b.classList.remove('on'));
-    const li = paneA.querySelector('button[data-i="' + i + '"]');
-    if (li) li.classList.add('on');
+    document.querySelectorAll('.pane button.on').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.pane button[data-i="' + i + '"]').forEach(b => b.classList.add('on'));
   }
 
-  paneW.addEventListener('click', e => {
-    const b = e.target.closest('button[data-step]');
+  paneW.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-step]');
     if (!b) return;
     const j = cur + (+b.dataset.step);
     if (j >= 0 && j < flat.length) { select(j, true); flat[j].el.focus(); }
   });
 
-  textEl.addEventListener('click', e => {
-    const w = e.target.closest('.w');
+  textEl.addEventListener('click', ev => {
+    const w = ev.target.closest('.w');
     if (w) { select(+w.dataset.i, false); showTab('w'); }
   });
-  textEl.addEventListener('keydown', e => {
-    const w = e.target.closest('.w');
+  textEl.addEventListener('keydown', ev => {
+    const w = ev.target.closest('.w');
     if (!w) return;
     const i = +w.dataset.i;
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i, false); return; }
-    const step = {ArrowDown:1, ArrowLeft:1, ArrowUp:-1, ArrowRight:-1}[e.key];
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(i, false); return; }
+    const step = {ArrowDown:1, ArrowLeft:1, ArrowUp:-1, ArrowRight:-1}[ev.key];
     if (step === undefined) return;
-    e.preventDefault();
+    ev.preventDefault();
     const j = Math.min(flat.length - 1, Math.max(0, i + step));
     select(j, true); flat[j].el.focus();
   });
 
-  /* ── 助動詞一覧タブ ──────────────────── */
+  /* ── 助動詞一覧 ─────────────────────── */
   (function buildAux(){
     const items = flat.map((f, i) => ({f, i})).filter(o => o.f.tk.c === 'aux');
     if (!items.length) {
@@ -164,27 +171,58 @@
     });
     paneA.innerHTML = h + '</ul>';
   })();
-  paneA.addEventListener('click', e => {
-    const b = e.target.closest('button[data-i]');
+
+  /* ── 句法一覧（漢文） ───────────────── */
+  const kuItems = flat.map((f, i) => ({f, i})).filter(o => o.f.tk.ku);
+  (function buildKu(){
+    if (!paneK) return;
+    if (!kuItems.length) { document.getElementById('tab-k').hidden = true; return; }
+    const groups = {};
+    kuItems.forEach(o => { (groups[o.f.tk.ku] = groups[o.f.tk.ku] || []).push(o); });
+    let h = '<div class="listhead">この章段に現れる句法　' + Object.keys(groups).length +
+            '種・' + kuItems.length + 'か所。行をクリックすると本文の該当箇所へ移動します。</div>';
+    Object.keys(groups).forEach(name => {
+      h += '<div class="kugroup"><h3>' + esc(name) + '</h3><ul class="list">';
+      groups[name].forEach(o => {
+        const t = o.f.tk;
+        const plain = (t.note || '').replace(/<[^>]+>/g, '').replace(/^[^　]*　/, '');
+        h += '<li><button data-i="' + o.i + '">' +
+             '<span class="s">' + esc(t.s) + '</span>' +
+             '<span class="g">' + esc(plain || t.m) + '</span>' +
+             (DAN.length > 1 ? '<span class="d">' + esc(o.f.dan) + '</span>' : '') +
+             '</button></li>';
+      });
+      h += '</ul></div>';
+    });
+    paneK.innerHTML = h;
+  })();
+
+  document.querySelectorAll('.pane').forEach(p => p.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-i]');
     if (!b) return;
     const i = +b.dataset.i;
     select(i, true); flat[i].el.focus();
-  });
+  }));
 
   /* ── タブ ───────────────────────────── */
+  const TABS = {w:'pane-w', a:'pane-a', k:'pane-k'};
   function showTab(which){
-    const on = which === 'w';
-    document.getElementById('tab-w').setAttribute('aria-selected', on);
-    document.getElementById('tab-a').setAttribute('aria-selected', !on);
-    paneW.hidden = !on; paneA.hidden = on;
+    Object.keys(TABS).forEach(k => {
+      const tab = document.getElementById('tab-' + k), pane = document.getElementById(TABS[k]);
+      if (!tab || !pane) return;
+      tab.setAttribute('aria-selected', k === which);
+      pane.hidden = k !== which;
+    });
   }
-  document.getElementById('tab-w').onclick = () => showTab('w');
-  document.getElementById('tab-a').onclick = () => showTab('a');
+  ['w','a','k'].forEach(k => {
+    const tab = document.getElementById('tab-' + k);
+    if (tab) tab.onclick = () => showTab(k);
+  });
 
   /* ── 表示の切り替え ─────────────────── */
   const hl = new Set();
-  document.getElementById('hlchips').addEventListener('click', e => {
-    const b = e.target.closest('.chip'); if (!b) return;
+  document.getElementById('hlchips').addEventListener('click', ev => {
+    const b = ev.target.closest('.chip'); if (!b) return;
     const k = b.dataset.hl;
     if (hl.has(k)) hl.delete(k); else hl.add(k);
     b.setAttribute('aria-pressed', hl.has(k));
@@ -193,6 +231,7 @@
 
   const toggle = (id, attr, target, init) => {
     const b = document.getElementById(id);
+    if (!b) return;
     let on = init;
     const apply = () => { b.setAttribute('aria-pressed', on); target.setAttribute(attr, on ? 'on' : 'off'); };
     b.onclick = () => { on = !on; apply(); };
@@ -201,18 +240,15 @@
   toggle('colorBtn', 'data-color', textEl, true);
   toggle('keiBtn',   'data-kei',   textEl, true);
 
-  /* 白文は漢文の章段にだけ出す */
+  /* 読み仮名（ルビ）は読みのある章段だけ */
+  const rubyBtn = document.getElementById('rubyBtn');
+  if (DAN.some(d => d.t.some(t => t.yomi))) toggle('rubyBtn', 'data-ruby', document.body, KANBUN);
+  else rubyBtn.hidden = true;
+
+  /* 白文は漢文の章段だけ。漢文では既定で出す */
   const hakuBtn = document.getElementById('hakuBtn');
-  if (DAN.some(d => d.k)) {
-    let hakuOn = false;
-    const applyHaku = () => { hakuBtn.setAttribute('aria-pressed', hakuOn); document.body.dataset.haku = hakuOn ? 'on' : 'off'; };
-    hakuBtn.onclick = () => { hakuOn = !hakuOn; applyHaku(); };
-    applyHaku();
-  } else {
-    hakuBtn.hidden = true;
-  }
-
-
+  if (DAN.some(d => d.k)) toggle('hakuBtn', 'data-haku', document.body, KANBUN);
+  else hakuBtn.hidden = true;
 
   const yb = document.getElementById('yakuBtn');
   let yakuOn = false;
@@ -227,6 +263,7 @@
 
   /* ── 初期状態 ───────────────────────── */
   showEmpty();
+  showTab(kuItems.length ? 'k' : 'w');
   const scroller = document.getElementById('scroll');
   scroller.scrollLeft = scroller.scrollWidth;   // 縦書きは右端から読み始める
 })();

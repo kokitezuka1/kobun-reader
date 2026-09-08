@@ -30,6 +30,10 @@
     <button role="tab" id="tab-quiz" aria-selected="false">文法問題</button>
   </div>
   <p class="drill-note">この章段の品詞分解から自動で作られています。カード <b id="deck-size">0</b> 枚、単語クイズの対象語 <b id="vocab-size">0</b> 語。クイズは毎回10問を選び直します。覚えた記録はこの端末のブラウザに残ります。</p>
+  <div class="scope" id="scope" role="group" aria-label="出題の範囲">
+    <button data-scope="all" aria-pressed="true">すべての語</button>
+    <button data-scope="imp" aria-pressed="false">要チェックのみ</button>
+  </div>
   <div class="pane-d" id="pane-card">
     <div class="bar" id="card-bar"></div>
     <div class="stat" id="card-stat"></div>

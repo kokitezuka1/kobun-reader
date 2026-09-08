@@ -552,3 +552,55 @@ body.drill{display:block; overflow:auto; height:auto; min-height:100dvh}
   flex:none; min-width:4.5em;
 }
 .misslist .m{color:var(--ink-2); line-height:1.7}
+
+/* ══ 読み仮名（ルビ） ════════════════════════════ */
+rt{
+  font-family:var(--gothic); font-size:.4em; font-weight:400;
+  letter-spacing:0; color:var(--ink-3);
+}
+body[data-ruby="off"] rt{display:none}
+[data-color="on"] .w.v rt, [data-color="on"] .w.adj rt,
+[data-color="on"] .w.aux rt, [data-color="on"] .w.pt rt,
+[data-color="on"] .w.n rt, [data-color="on"] .w.o rt{color:inherit; opacity:.7}
+
+/* ══ 句法 ════════════════════════════════════════ */
+:root{ --ku:#1F5E8C; --imp-band:rgba(192,138,30,.20); }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --ku:#82B9E2; --imp-band:rgba(231,192,99,.20); } }
+:root[data-theme="dark"]{ --ku:#82B9E2; --imp-band:rgba(231,192,99,.20); }
+.w.ku{
+  text-decoration:underline; text-decoration-color:var(--star);
+  text-decoration-thickness:2px; text-underline-offset:.28em;
+}
+[data-hl~="imp"] .w.imp{background:var(--imp-band)}
+.chip.imp .dot{color:var(--star)}
+.chip.imp[aria-pressed="true"]{background:var(--imp-band); border-color:var(--star); color:var(--star)}
+.legend .kuline{
+  text-decoration:underline; text-decoration-color:var(--star);
+  text-decoration-thickness:2px; text-underline-offset:.2em; color:var(--ink-2);
+}
+.kutag{
+  display:inline-block; margin-inline-start:7px; margin-block-end:16px;
+  font-size:11px; font-weight:500; letter-spacing:.08em;
+  color:var(--star); border:1px solid currentColor; border-radius:999px; padding:3px 9px;
+}
+.kugroup{margin-block-end:16px}
+.kugroup h3{
+  font-size:11px; font-weight:500; letter-spacing:.2em; color:var(--star);
+  margin:0 0 6px; padding-block-end:5px; border-block-end:1px solid var(--rule-2);
+}
+.kugroup .list .s{color:var(--star)}
+.tabs button{padding:11px 2px; font-size:11.5px; letter-spacing:.06em}
+
+/* ══ 出題の範囲 ══════════════════════════════════ */
+.scope{display:flex; gap:6px; margin-block-end:16px; flex-wrap:wrap}
+.scope[hidden]{display:none}
+.scope button{
+  font:inherit; font-size:11.5px; font-weight:500; letter-spacing:.06em;
+  padding:6px 12px; border-radius:999px; cursor:pointer;
+  background:transparent; border:1px solid var(--rule); color:var(--ink-3);
+}
+.scope button:hover{background:var(--hover); color:var(--ink-2)}
+.scope button[aria-pressed="true"]{
+  background:var(--imp-band); border-color:var(--star); color:var(--star);
+}
+.kuinline{color:var(--star); font-weight:500}
