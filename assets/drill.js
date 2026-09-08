@@ -233,16 +233,50 @@
   }
   const gq = Quiz('quiz-box', grammarQs, 'この章段では文法の問題を作れませんでした。');
 
+  /* ══ テスト対策（頻出ポイントの一問一答） ═════════ */
+  const spots = (window.SPOTS || {})[WK.id] || [];
+  const spotBox = document.getElementById('spot-box');
+  let si = 0, sOpen = false;
+  function drawSpot() {
+    if (!spots.length) { spotBox.innerHTML = '<div class="done"><p>この章段には頻出ポイントを用意していません。</p></div>'; return; }
+    const sp = spots[si];
+    spotBox.innerHTML =
+      '<div class="stat">第' + (si + 1) + '問 / ' + spots.length + '　<span class="tt">' + esc(sp.t) + '</span>' +
+      (sp.d ? '　第' + esc(sp.d) + '段' : '') + '</div>' +
+      '<div class="flash' + (sOpen ? ' flipped' : '') + '" data-act="flip">' +
+      '  <div class="fside front"><span class="qq">' + esc(sp.q) + '</span>' +
+      '    <span class="hint">タップで答えを見る</span></div>' +
+      '  <div class="fside back"><p class="ans">' + esc(sp.a) + '</p>' +
+      (sp.w ? '<div class="note">' + esc(sp.w) + '</div>' : '') + '</div>' +
+      '</div>' +
+      '<div class="row2">' +
+      '  <button class="btn ghost" data-act="prev"' + (si === 0 ? ' disabled' : '') + '>← 前へ</button>' +
+      (si < spots.length - 1
+        ? '  <button class="btn" data-act="next">次へ →</button>'
+        : '  <a class="btn" href="' + WK.id + '.html">本文で確かめる</a>') +
+      '</div>';
+  }
+  spotBox.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-act]');
+    if (!b) return;
+    const a = b.dataset.act;
+    if (a === 'flip') { sOpen = !sOpen; drawSpot(); }
+    if (a === 'prev') { si = Math.max(0, si - 1); sOpen = false; drawSpot(); }
+    if (a === 'next') { si = Math.min(spots.length - 1, si + 1); sOpen = false; drawSpot(); }
+  });
+
   /* ══ モード切り替え ═════════════════════════════════ */
-  const MODES = {card: 'tab-card', vocab: 'tab-vocab', quiz: 'tab-quiz'};
+  const MODES = {spot: 'tab-spot', card: 'tab-card', vocab: 'tab-vocab', quiz: 'tab-quiz'};
   function show(mode) {
     Object.keys(MODES).forEach(k => {
       document.getElementById(MODES[k]).setAttribute('aria-selected', k === mode);
       document.getElementById('pane-' + k).hidden = k !== mode;
     });
+    scopeBox.hidden = !scopeUsable || mode === 'spot';
     if (mode === 'vocab') vq.ensure();
     if (mode === 'quiz') gq.ensure();
   }
+  document.getElementById('tab-spot').onclick  = () => show('spot');
   document.getElementById('tab-card').onclick  = () => show('card');
   document.getElementById('tab-vocab').onclick = () => show('vocab');
   document.getElementById('tab-quiz').onclick  = () => show('quiz');
@@ -252,6 +286,7 @@
     document.getElementById('vocab-size').textContent = pool().filter(isVocab).length;
   };
   const scopeBox = document.getElementById('scope');
+  let scopeUsable = false;
   const impCount = cards.filter(c => c.imp).length;
   if (impCount && impCount < cards.length) {
     scopeBox.addEventListener('click', ev => {
@@ -263,12 +298,13 @@
       sizes(); newQueue(true);
       vq.build(); vq.draw(); gq.build(); gq.draw();
     });
-  } else {
-    scopeBox.hidden = true;
+    scopeUsable = true;
   }
   sizes();
+  document.getElementById('spot-size').textContent = spots.length;
+  drawSpot();
   newQueue(true);
   vq.build(); vq.draw();
   gq.build(); gq.draw();
-  show('card');
+  show(spots.length ? 'spot' : 'card');
 })();

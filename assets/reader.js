@@ -96,7 +96,8 @@
     paneW.innerHTML =
       '<div class="empty"><span class="k">語</span>' +
       '本文の語をクリックすると、ここに品詞・活用・意味・語法のメモが表示されます。<br><br>' +
-      'まずは<b>' + (KANBUN ? '句法' : '助動詞') + '</b>から追うと、' + esc(WORK.hint || 'この文章の語り口') + 'がつかめます。</div>';
+      'まずは<b>' + (KANBUN ? '句法' : '助動詞') + '</b>から追うと、' + esc(WORK.hint || 'この文章の語り口') + 'がつかめます。' +
+      (spots.length ? '<br><br><b>頻出</b>タブに、テストでねらわれやすい' + spots.length + '箇所をまとめました。' : '') + '</div>';
   }
 
   function select(i, scroll){
@@ -172,6 +173,38 @@
     paneA.innerHTML = h + '</ul>';
   })();
 
+  /* ── 頻出ポイント ───────────────────── */
+  const spots = (window.SPOTS || {})[WORK.id] || [];
+  spots.forEach(sp => {
+    if (!sp.s) return;
+    const hit = flat.findIndex(f => f.dan === sp.d && f.tk.s === sp.s);
+    if (hit >= 0) { sp.i = hit; flat[hit].el.classList.add('spot'); }
+  });
+  (function buildSpots(){
+    const pane = document.getElementById('pane-s');
+    if (!pane) return;
+    if (!spots.length) { document.getElementById('tab-s').hidden = true; return; }
+    let h = '<div class="listhead">テストでねらわれやすい箇所　' + spots.length +
+            '件。問いをクリックすると答えが出ます。</div><ol class="spots">';
+    spots.forEach((sp, n) => {
+      h += '<li><button class="sq" data-si="' + n + '" aria-expanded="false">' +
+           '<span class="tt">' + esc(sp.t) + '</span>' +
+           '<span class="qq">' + esc(sp.q) + '</span></button>' +
+           '<div class="sa" hidden><p class="ans">' + esc(sp.a) + '</p>' +
+           (sp.w ? '<div class="note">' + esc(sp.w) + '</div>' : '') +
+           (sp.i !== undefined ? '<button class="jump" data-i="' + sp.i + '">本文の該当箇所へ →</button>' : '') +
+           '</div></li>';
+    });
+    pane.innerHTML = h + '</ol>';
+    pane.addEventListener('click', ev => {
+      const b = ev.target.closest('.sq');
+      if (!b) return;
+      const box = b.nextElementSibling, open = !box.hidden;
+      box.hidden = open;
+      b.setAttribute('aria-expanded', !open);
+    });
+  })();
+
   /* ── 句法一覧（漢文） ───────────────── */
   const kuItems = flat.map((f, i) => ({f, i})).filter(o => o.f.tk.ku);
   (function buildKu(){
@@ -205,7 +238,7 @@
   }));
 
   /* ── タブ ───────────────────────────── */
-  const TABS = {w:'pane-w', a:'pane-a', k:'pane-k'};
+  const TABS = {w:'pane-w', a:'pane-a', k:'pane-k', s:'pane-s'};
   function showTab(which){
     Object.keys(TABS).forEach(k => {
       const tab = document.getElementById('tab-' + k), pane = document.getElementById(TABS[k]);
@@ -214,7 +247,7 @@
       pane.hidden = k !== which;
     });
   }
-  ['w','a','k'].forEach(k => {
+  ['w','a','k','s'].forEach(k => {
     const tab = document.getElementById('tab-' + k);
     if (tab) tab.onclick = () => showTab(k);
   });

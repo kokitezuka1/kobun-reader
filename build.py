@@ -35,6 +35,16 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
 e = html.escape
 
 
+def ver(rel):
+    """assets/*.js などに内容ハッシュを付ける（ブラウザの古いキャッシュ対策）"""
+    f = ROOT / rel
+    if not f.exists():
+        return rel
+    import hashlib
+    h = hashlib.sha1(f.read_bytes()).hexdigest()[:8]
+    return '%s?v=%s' % (rel, h)
+
+
 def load():
     works = []
     for path in sorted((ROOT / 'texts').glob('*.js')):
@@ -60,8 +70,8 @@ def head(title, desc, body_class=''):
             '<meta name="color-scheme" content="light dark">\n'
             '<meta name="description" content="%s">\n<title>%s</title>\n'
             '<link rel="icon" href="%s">\n%s\n'
-            '<link rel="stylesheet" href="assets/style.css">\n</head>\n<body%s>\n'
-            % (e(desc, quote=True), e(title), FAVICON, FONTS,
+            '<link rel="stylesheet" href="%s">\n</head>\n<body%s>\n'
+            % (e(desc, quote=True), e(title), FAVICON, FONTS, ver('assets/style.css'),
                ' class="%s"' % body_class if body_class else ''))
 
 
@@ -80,6 +90,7 @@ CONTROLS = '''  <div class="tools">
       <button class="chip n" data-hl="n" aria-pressed="false"><span class="dot"></span>名詞</button>
       <button class="chip o" data-hl="o" aria-pressed="false"><span class="dot"></span>その他</button>
       <button class="chip imp" data-hl="imp" aria-pressed="false"><span class="dot"></span>要チェック</button>
+      <button class="chip spot" data-hl="spot" aria-pressed="false"><span class="dot"></span>頻出</button>
     </div>
     <div class="grp">
       <button class="chip kei" id="keiBtn" aria-pressed="true"><span class="dot"></span>敬語に圏点</button>
@@ -103,11 +114,13 @@ PANEL = '''<main>
     <div class="tabs" role="tablist">
       <button role="tab" id="tab-w" aria-selected="true" aria-controls="pane-w">語　釈</button>
       <button role="tab" id="tab-a" aria-selected="false" aria-controls="pane-a">助動詞</button>
-      <button role="tab" id="tab-k" aria-selected="false" aria-controls="pane-k">句　法</button>
+      <button role="tab" id="tab-k" aria-selected="false" aria-controls="pane-k">句法</button>
+      <button role="tab" id="tab-s" aria-selected="false" aria-controls="pane-s">頻出</button>
     </div>
     <div class="pane" id="pane-w" role="tabpanel" aria-labelledby="tab-w"></div>
     <div class="pane" id="pane-a" role="tabpanel" aria-labelledby="tab-a" hidden></div>
     <div class="pane" id="pane-k" role="tabpanel" aria-labelledby="tab-k" hidden></div>
+    <div class="pane" id="pane-s" role="tabpanel" aria-labelledby="tab-s" hidden></div>
     <div class="legend">
       本文の語をクリック／タップすると品詞・活用・意味が出ます。<br>
       <span class="sesame">圏点</span>は敬語、<span class="kuline">下線</span>は句法。矢印キーで前後の語へ移動。
@@ -130,11 +143,12 @@ def work_page(w):
               % (star(w['id']), e(w['title']), e(w['work']), e(w['chapter']),
                  e(w['range']), e(w['id']))
             + CONTROLS + '</header>\n\n' + PANEL
-            + '\n<script src="assets/kit.js"></script>\n'
-              '<script src="assets/works.js"></script>\n'
-              '<script src="assets/favorites.js"></script>\n'
-              '<script src="texts/%s"></script>\n'
-              '<script src="assets/reader.js"></script>\n</body>\n</html>\n' % w['file'])
+            + '\n<script src="%s"></script>\n' % ver('assets/kit.js')
+            + '<script src="%s"></script>\n' % ver('assets/works.js')
+            + '<script src="%s"></script>\n' % ver('assets/favorites.js')
+            + '<script src="%s"></script>\n' % ver('assets/spots.js')
+            + '<script src="texts/%s"></script>\n' % w['file']
+            + '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/reader.js'))
 
 
 def drill_page(w):
@@ -149,18 +163,21 @@ def drill_page(w):
               % (e(w['id']), star(w['id']), e(w['title']), e(w['work']))
             + '<div class="drill-wrap">\n'
               '  <div class="drill-tabs" role="tablist">\n'
-              '    <button role="tab" id="tab-card" aria-selected="true">フラッシュカード</button>\n'
+              '    <button role="tab" id="tab-spot" aria-selected="true">テスト対策</button>\n'
+              '    <button role="tab" id="tab-card" aria-selected="false">フラッシュカード</button>\n'
               '    <button role="tab" id="tab-vocab" aria-selected="false">単語クイズ</button>\n'
               '    <button role="tab" id="tab-quiz" aria-selected="false">文法問題</button>\n'
               '  </div>\n'
-              '  <p class="drill-note">この章段の品詞分解から自動で作られています。'
-              'カード <b id="deck-size">0</b> 枚、単語クイズの対象語 <b id="vocab-size">0</b> 語。'
+              '  <p class="drill-note">テストでねらわれやすい <b id="spot-size">0</b> 箇所の一問一答と、'
+              '品詞分解から自動で作った カード <b id="deck-size">0</b> 枚・'
+              '単語クイズの対象語 <b id="vocab-size">0</b> 語。'
               'クイズは毎回10問を選び直します。覚えた記録はこの端末のブラウザに残ります。</p>\n'
               '  <div class="scope" id="scope" role="group" aria-label="出題の範囲">\n'
               '    <button data-scope="all" aria-pressed="true">すべての語</button>\n'
               '    <button data-scope="imp" aria-pressed="false">要チェックのみ</button>\n'
               '  </div>\n'
-              '  <div class="pane-d" id="pane-card">\n'
+              '  <div class="pane-d" id="pane-spot"><div id="spot-box"></div></div>\n'
+              '  <div class="pane-d" id="pane-card" hidden>\n'
               '    <div class="bar" id="card-bar"></div>\n'
               '    <div class="stat" id="card-stat"></div>\n'
               '    <div id="card-box"></div>\n'
@@ -168,11 +185,12 @@ def drill_page(w):
               '  <div class="pane-d" id="pane-vocab" hidden><div id="vocab-box"></div></div>\n'
               '  <div class="pane-d" id="pane-quiz" hidden><div id="quiz-box"></div></div>\n'
               '</div>\n'
-            + '\n<script src="assets/kit.js"></script>\n'
-              '<script src="assets/works.js"></script>\n'
-              '<script src="assets/favorites.js"></script>\n'
-              '<script src="texts/%s"></script>\n'
-              '<script src="assets/drill.js"></script>\n</body>\n</html>\n' % w['file'])
+            + '\n<script src="%s"></script>\n' % ver('assets/kit.js')
+            + '<script src="%s"></script>\n' % ver('assets/works.js')
+            + '<script src="%s"></script>\n' % ver('assets/favorites.js')
+            + '<script src="%s"></script>\n' % ver('assets/spots.js')
+            + '<script src="texts/%s"></script>\n' % w['file']
+            + '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/drill.js'))
 
 
 def card(w):
@@ -229,9 +247,9 @@ def index_page(works):
                '  お気に入りと学習の記録は、この端末のブラウザにだけ保存されます。<br>\n'
                '  章段を足すときは <code>texts/</code> に .js を置いて <code>python3 build.py</code> を実行してください。\n'
                '</div>\n</div>\n'
-               '<script src="assets/works.js"></script>\n'
-               '<script src="assets/favorites.js"></script>\n'
-               '<script src="assets/index.js"></script>\n</body>\n</html>\n')
+               '<script src="%s"></script>\n' % ver('assets/works.js') +
+               '<script src="%s"></script>\n' % ver('assets/favorites.js') +
+               '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/index.js'))
     return ''.join(out)
 
 

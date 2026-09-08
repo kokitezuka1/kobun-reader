@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@400;600;900&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=5fe0db62">
 </head>
 <body class="drill">
 <header>
@@ -25,16 +25,18 @@
 
 <div class="drill-wrap">
   <div class="drill-tabs" role="tablist">
-    <button role="tab" id="tab-card" aria-selected="true">フラッシュカード</button>
+    <button role="tab" id="tab-spot" aria-selected="true">テスト対策</button>
+    <button role="tab" id="tab-card" aria-selected="false">フラッシュカード</button>
     <button role="tab" id="tab-vocab" aria-selected="false">単語クイズ</button>
     <button role="tab" id="tab-quiz" aria-selected="false">文法問題</button>
   </div>
-  <p class="drill-note">この章段の品詞分解から自動で作られています。カード <b id="deck-size">0</b> 枚、単語クイズの対象語 <b id="vocab-size">0</b> 語。クイズは毎回10問を選び直します。覚えた記録はこの端末のブラウザに残ります。</p>
+  <p class="drill-note">テストでねらわれやすい <b id="spot-size">0</b> 箇所の一問一答と、品詞分解から自動で作った カード <b id="deck-size">0</b> 枚・単語クイズの対象語 <b id="vocab-size">0</b> 語。クイズは毎回10問を選び直します。覚えた記録はこの端末のブラウザに残ります。</p>
   <div class="scope" id="scope" role="group" aria-label="出題の範囲">
     <button data-scope="all" aria-pressed="true">すべての語</button>
     <button data-scope="imp" aria-pressed="false">要チェックのみ</button>
   </div>
-  <div class="pane-d" id="pane-card">
+  <div class="pane-d" id="pane-spot"><div id="spot-box"></div></div>
+  <div class="pane-d" id="pane-card" hidden>
     <div class="bar" id="card-bar"></div>
     <div class="stat" id="card-stat"></div>
     <div id="card-box"></div>
@@ -43,10 +45,11 @@
   <div class="pane-d" id="pane-quiz" hidden><div id="quiz-box"></div></div>
 </div>
 
-<script src="assets/kit.js"></script>
-<script src="assets/works.js"></script>
-<script src="assets/favorites.js"></script>
+<script src="assets/kit.js?v=169f852d"></script>
+<script src="assets/works.js?v=ed59358c"></script>
+<script src="assets/favorites.js?v=5e13d91e"></script>
+<script src="assets/spots.js?v=9a2660e5"></script>
 <script src="texts/tamakatsuma-inaka.js"></script>
-<script src="assets/drill.js"></script>
+<script src="assets/drill.js?v=961b5cc5"></script>
 </body>
 </html>

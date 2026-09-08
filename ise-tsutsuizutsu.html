@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@400;600;900&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=5fe0db62">
 </head>
 <body>
 <header>
@@ -32,6 +32,7 @@
       <button class="chip n" data-hl="n" aria-pressed="false"><span class="dot"></span>名詞</button>
       <button class="chip o" data-hl="o" aria-pressed="false"><span class="dot"></span>その他</button>
       <button class="chip imp" data-hl="imp" aria-pressed="false"><span class="dot"></span>要チェック</button>
+      <button class="chip spot" data-hl="spot" aria-pressed="false"><span class="dot"></span>頻出</button>
     </div>
     <div class="grp">
       <button class="chip kei" id="keiBtn" aria-pressed="true"><span class="dot"></span>敬語に圏点</button>
@@ -55,11 +56,13 @@
     <div class="tabs" role="tablist">
       <button role="tab" id="tab-w" aria-selected="true" aria-controls="pane-w">語　釈</button>
       <button role="tab" id="tab-a" aria-selected="false" aria-controls="pane-a">助動詞</button>
-      <button role="tab" id="tab-k" aria-selected="false" aria-controls="pane-k">句　法</button>
+      <button role="tab" id="tab-k" aria-selected="false" aria-controls="pane-k">句法</button>
+      <button role="tab" id="tab-s" aria-selected="false" aria-controls="pane-s">頻出</button>
     </div>
     <div class="pane" id="pane-w" role="tabpanel" aria-labelledby="tab-w"></div>
     <div class="pane" id="pane-a" role="tabpanel" aria-labelledby="tab-a" hidden></div>
     <div class="pane" id="pane-k" role="tabpanel" aria-labelledby="tab-k" hidden></div>
+    <div class="pane" id="pane-s" role="tabpanel" aria-labelledby="tab-s" hidden></div>
     <div class="legend">
       本文の語をクリック／タップすると品詞・活用・意味が出ます。<br>
       <span class="sesame">圏点</span>は敬語、<span class="kuline">下線</span>は句法。矢印キーで前後の語へ移動。
@@ -68,10 +71,11 @@
   <div id="scroll"><div id="text"></div></div>
 </main>
 
-<script src="assets/kit.js"></script>
-<script src="assets/works.js"></script>
-<script src="assets/favorites.js"></script>
+<script src="assets/kit.js?v=169f852d"></script>
+<script src="assets/works.js?v=ed59358c"></script>
+<script src="assets/favorites.js?v=5e13d91e"></script>
+<script src="assets/spots.js?v=9a2660e5"></script>
 <script src="texts/ise-tsutsuizutsu.js"></script>
-<script src="assets/reader.js"></script>
+<script src="assets/reader.js?v=bbee212a"></script>
 </body>
 </html>
