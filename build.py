@@ -98,6 +98,7 @@ CONTROLS = '''  <div class="tools">
       <button class="chip plain" id="rubyBtn" aria-pressed="false">読み仮名</button>
       <button class="chip plain" id="hakuBtn" aria-pressed="false">白文</button>
       <button class="chip plain" id="yakuBtn" aria-pressed="false">現代語訳</button>
+      <button class="chip ink" id="inkBtn" aria-pressed="false">書き込み</button>
     </div>
     <div class="grp">
       <span class="lab">字</span>
@@ -150,7 +151,9 @@ def work_page(w):
             + '<script src="%s"></script>\n' % ver('assets/lexicon.js')
             + '<script src="%s"></script>\n' % ver('assets/conj.js')
             + '<script src="texts/%s"></script>\n' % w['file']
-            + '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/reader.js'))
+            + '<script src="%s"></script>\n' % ver('assets/reader.js')
+            + '<script src="%s"></script>\n' % ver('assets/ink.js')
+            + '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/inkui.js'))
 
 
 def drill_page(w):
