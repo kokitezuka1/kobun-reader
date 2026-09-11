@@ -653,3 +653,63 @@ body[data-ruby="off"] rt{display:none}
   font-family:var(--mincho); font-size:17px; line-height:1.95; text-align:start;
   margin:0; max-width:28em;
 }
+
+/* ══ 辞書（単語帳）と活用表 ══════════════════════ */
+.lex, .conj{
+  margin-block-start:16px; border:1px solid var(--rule);
+  border-radius:9px; background:var(--paper-2); overflow:hidden;
+}
+.lex-head, .conj-head{
+  display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+  padding:9px 12px; border-block-end:1px solid var(--rule);
+  background:var(--paper-4);
+}
+.lex-head .w, .conj-head .w{font-family:var(--mincho); font-size:16px; letter-spacing:.04em}
+.lex-head .y{font-size:11px; color:var(--ink-3)}
+.lex-head .p, .conj-head .p{font-size:11px; color:var(--ink-2)}
+.lex-head .src, .conj-head .src{
+  margin-inline-start:auto; font-size:9.5px; letter-spacing:.18em;
+  color:var(--ink-3); border:1px solid var(--rule); border-radius:4px; padding:1px 6px;
+}
+ol.senses{margin:0; padding:10px 12px 10px 0; list-style:none; counter-reset:sense}
+ol.senses li{
+  counter-increment:sense; position:relative; padding-inline-start:34px;
+  font-size:13px; line-height:1.8; margin-block-end:3px;
+}
+ol.senses li::before{
+  content:"①②③④⑤⑥" ; content:counter(sense, decimal);
+  position:absolute; inset-inline-start:12px; top:0;
+  font-size:11px; color:var(--accent); font-variant-numeric:tabular-nums;
+  border:1px solid var(--accent-line); border-radius:50%;
+  width:15px; height:15px; line-height:14px; text-align:center;
+}
+.lex-note{
+  margin:0; padding:9px 12px; font-size:12px; line-height:1.8; color:var(--ink-2);
+  border-block-start:1px dashed var(--rule);
+}
+.conj-meta{
+  display:flex; flex-wrap:wrap; gap:4px 14px; padding:8px 12px;
+  font-size:11.5px; color:var(--ink-2); border-block-end:1px dashed var(--rule);
+}
+.conj-meta b{
+  font-weight:500; color:var(--ink-3); letter-spacing:.1em;
+  font-size:10px; margin-inline-end:5px;
+}
+.conj-scroll{overflow-x:auto}
+.conj table{border-collapse:collapse; width:100%; min-width:300px}
+.conj th, .conj td{
+  border-inline-end:1px solid var(--rule); padding:6px 4px; text-align:center;
+  font-size:11px; line-height:1.45;
+}
+.conj th:last-child, .conj td:last-child{border-inline-end:0}
+.conj th{
+  font-weight:500; color:var(--ink-3); letter-spacing:.04em;
+  border-block-end:1px solid var(--rule); background:var(--paper-3);
+}
+.conj td{font-family:var(--mincho); font-size:13px; color:var(--ink); padding:9px 4px}
+.conj th.on{color:var(--accent); background:var(--accent-soft)}
+.conj td.on{background:var(--accent-soft); color:var(--accent); font-weight:600}
+
+/* カードをめくったときに下へ出す辞書・活用表 */
+.cardref{max-width:560px; margin:14px auto 0; text-align:start}
+.cardref .lex, .cardref .conj{margin-block-start:10px}

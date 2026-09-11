@@ -147,6 +147,8 @@ def work_page(w):
             + '<script src="%s"></script>\n' % ver('assets/works.js')
             + '<script src="%s"></script>\n' % ver('assets/favorites.js')
             + '<script src="%s"></script>\n' % ver('assets/spots.js')
+            + '<script src="%s"></script>\n' % ver('assets/lexicon.js')
+            + '<script src="%s"></script>\n' % ver('assets/conj.js')
             + '<script src="texts/%s"></script>\n' % w['file']
             + '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/reader.js'))
 
@@ -189,6 +191,8 @@ def drill_page(w):
             + '<script src="%s"></script>\n' % ver('assets/works.js')
             + '<script src="%s"></script>\n' % ver('assets/favorites.js')
             + '<script src="%s"></script>\n' % ver('assets/spots.js')
+            + '<script src="%s"></script>\n' % ver('assets/lexicon.js')
+            + '<script src="%s"></script>\n' % ver('assets/conj.js')
             + '<script src="texts/%s"></script>\n' % w['file']
             + '<script src="%s"></script>\n</body>\n</html>\n' % ver('assets/drill.js'))
 

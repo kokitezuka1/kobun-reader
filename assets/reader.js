@@ -78,6 +78,8 @@
     textEl.appendChild(end);
   }
 
+
+
   /* ── 語釈パネル ─────────────────────── */
   let cur = -1;
 
@@ -122,6 +124,8 @@
     h += '</dl>';
     if (tk.kei) h += '<div class="keitag">敬語（' + esc(tk.kei) + '語）</div>';
     if (tk.note) h += '<div class="note">' + tk.note + '</div>';
+    h += REF.conjHtml(tk);
+    h += REF.lexHtml(tk);
     h += '<div class="ctx">' + context(i) + '</div>';
     h += '<div class="nav"><button data-step="-1">← 前の語</button><button data-step="1">次の語 →</button></div>';
     paneW.innerHTML = h;

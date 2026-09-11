@@ -90,6 +90,7 @@
       (c.note ? '<div class="note">' + c.note + '</div>' : '') +
       '  </div>' +
       '</div>' +
+      (face && window.REF ? '<div class="cardref">' + REF.conjHtml(c) + REF.lexHtml(c) + '</div>' : '') +
       '<div class="row2">' +
       '  <button class="btn ghost" data-act="later">もう一度</button>' +
       '  <button class="btn" data-act="got">覚えた</button>' +
@@ -180,6 +181,7 @@
         '　' + esc(c.p) + (c.g ? '／' + esc(c.g) : '') +
         (c.ku ? '　<span class="kuinline">句法・' + esc(c.ku) + '</span>' : '') + '　' + esc(c.m) +
         (c.note ? '<div class="note">' + c.note + '</div>' : '') +
+        (window.REF ? REF.conjHtml(c) + REF.lexHtml(c) : '') +
         '<div class="row2"><button class="btn" data-act="next">次へ</button></div>';
       v.querySelector('[data-act="next"]').onclick = () => { qi++; draw(); };
     });
