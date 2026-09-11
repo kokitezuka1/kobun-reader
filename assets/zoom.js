@@ -29,7 +29,6 @@
     sizer.style.height = Math.round(H * z) + 'px';
     stage.style.transform = z === 1 ? 'none' : 'scale(' + z + ')';
     scrollEl.dataset.zoomed = z > 1.001 ? 'on' : 'off';
-    if (window.INK) INK.sizeCanvas();
     document.dispatchEvent(new CustomEvent('zoomchange', {detail:{scale:z}}));
   }
   function relayout() { measure(); apply(); }
@@ -59,11 +58,8 @@
   const mid  = () => { const [a, b] = two(); return [(a.x + b.x) / 2, (a.y + b.y) / 2]; };
   const by = (dx, dy) => { scrollEl.scrollLeft -= dx; scrollEl.scrollTop -= dy; };
 
-  /* 書き込み中で、その指が線を引かないときだけ一本指で動かす */
-  function fingerPans() {
-    if (!window.INK || !INK.isOn()) return false;   // 書き込みオフなら普通のスクロールに任せる
-    return !INK.drawsWithTouch();
-  }
+  /* 拡大しているときは一本指でも紙を動かせるようにする */
+  function fingerPans() { return z > 1.001; }
 
   scrollEl.addEventListener('pointerdown', e => {
     if (e.pointerType !== 'touch') return;
@@ -71,7 +67,6 @@
     if (touches.size === 1) {
       ges = fingerPans() ? {mode:'pan', x:e.clientX, y:e.clientY} : null;
     } else if (touches.size === 2) {
-      if (window.INK) INK.cancelStroke();
       const [mx, my] = mid();
       ges = {mode:'pinch', d:dist(), z, x:mx, y:my};
     }
@@ -121,7 +116,6 @@
     if (e.button !== 1 && !(space && e.button === 0)) return;
     e.preventDefault();
     drag = {x:e.clientX, y:e.clientY};
-    if (window.INK) INK.cancelStroke();
     try { scrollEl.setPointerCapture(e.pointerId); } catch (err) {}
   }, true);
   scrollEl.addEventListener('pointermove', e => {
@@ -141,12 +135,7 @@
       zoomAt(z * Math.pow(0.995, e.deltaY), e.clientX, e.clientY);
       return;
     }
-    /* 書き込み中は台紙の上でもホイールで動かせるようにする */
-    if (window.INK && INK.isOn()) {
-      e.preventDefault();
-      scrollEl.scrollLeft += e.deltaX + (e.shiftKey ? e.deltaY : 0);
-      scrollEl.scrollTop  += e.shiftKey ? 0 : e.deltaY;
-    }
+
   }, {passive:false});
 
   document.addEventListener('keydown', e => {
