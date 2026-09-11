@@ -822,3 +822,5 @@ body[data-ink="on"] .w{cursor:crosshair}
   color:var(--ink-3); border-block-start:1px dashed var(--rule);
 }
 .ib.zoomlevel{min-width:4.2em; font-variant-numeric:tabular-nums; color:var(--ink-2)}
+body[data-pan="on"] .inkcanvas,
+body[data-pan="on"] #scroll{cursor:grab}

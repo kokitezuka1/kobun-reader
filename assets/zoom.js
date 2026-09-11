@@ -51,47 +51,102 @@
     return [r.left + r.width / 2, r.top + r.height / 2];
   };
 
-  /* 二本指のピンチ */
+  /* 指の操作　一本指＝移動、二本指＝ピンチしながら移動 */
   const touches = new Map();
-  let pinch = null;
-  const dist = () => {
-    const [a, b] = [...touches.values()];
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  };
-  const mid = () => {
-    const [a, b] = [...touches.values()];
-    return [(a.x + b.x) / 2, (a.y + b.y) / 2];
-  };
+  let ges = null;
+  const two = () => [...touches.values()];
+  const dist = () => { const [a, b] = two(); return Math.hypot(a.x - b.x, a.y - b.y); };
+  const mid  = () => { const [a, b] = two(); return [(a.x + b.x) / 2, (a.y + b.y) / 2]; };
+  const by = (dx, dy) => { scrollEl.scrollLeft -= dx; scrollEl.scrollTop -= dy; };
+
+  /* 書き込み中で、その指が線を引かないときだけ一本指で動かす */
+  function fingerPans() {
+    if (!window.INK || !INK.isOn()) return false;   // 書き込みオフなら普通のスクロールに任せる
+    return !INK.drawsWithTouch();
+  }
+
   scrollEl.addEventListener('pointerdown', e => {
     if (e.pointerType !== 'touch') return;
     touches.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if (touches.size === 2) {
-      pinch = {d:dist(), z};
+    if (touches.size === 1) {
+      ges = fingerPans() ? {mode:'pan', x:e.clientX, y:e.clientY} : null;
+    } else if (touches.size === 2) {
       if (window.INK) INK.cancelStroke();
+      const [mx, my] = mid();
+      ges = {mode:'pinch', d:dist(), z, x:mx, y:my};
     }
   }, true);
+
   scrollEl.addEventListener('pointermove', e => {
-    if (e.pointerType !== 'touch' || !touches.has(e.pointerId)) return;
+    if (e.pointerType !== 'touch' || !touches.has(e.pointerId) || !ges) return;
     touches.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if (touches.size === 2 && pinch) {
+    if (ges.mode === 'pan' && touches.size === 1) {
       e.preventDefault();
-      const d = dist();
-      if (pinch.d > 0) { const [mx, my] = mid(); zoomAt(pinch.z * (d / pinch.d), mx, my); }
+      by(e.clientX - ges.x, e.clientY - ges.y);
+      ges.x = e.clientX; ges.y = e.clientY;
+      return;
+    }
+    if (ges.mode === 'pinch' && touches.size === 2) {
+      e.preventDefault();
+      const d = dist(), [mx, my] = mid();
+      by(mx - ges.x, my - ges.y);          // 二本指の中心が動いたぶん紙を動かす
+      ges.x = mx; ges.y = my;
+      if (ges.d > 0) zoomAt(ges.z * (d / ges.d), mx, my);
     }
   }, true);
+
   const end = e => {
     if (e.pointerType !== 'touch') return;
     touches.delete(e.pointerId);
-    if (touches.size < 2) pinch = null;
+    if (touches.size === 1 && fingerPans()) {
+      const [a] = two();
+      ges = {mode:'pan', x:a.x, y:a.y};     // 一本残ったらそのまま移動へ
+    } else if (touches.size === 0) ges = null;
   };
   scrollEl.addEventListener('pointerup', end, true);
   scrollEl.addEventListener('pointercancel', end, true);
 
+  /* パソコンでは スペース＋ドラッグ と 中ボタンドラッグ で動かす */
+  let drag = null, space = false;
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !e.repeat && e.target === document.body) {
+      space = true; document.body.dataset.pan = 'on'; e.preventDefault();
+    }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.code === 'Space') { space = false; delete document.body.dataset.pan; }
+  });
+  scrollEl.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') return;
+    if (e.button !== 1 && !(space && e.button === 0)) return;
+    e.preventDefault();
+    drag = {x:e.clientX, y:e.clientY};
+    if (window.INK) INK.cancelStroke();
+    try { scrollEl.setPointerCapture(e.pointerId); } catch (err) {}
+  }, true);
+  scrollEl.addEventListener('pointermove', e => {
+    if (!drag) return;
+    e.preventDefault();
+    by(e.clientX - drag.x, e.clientY - drag.y);
+    drag = {x:e.clientX, y:e.clientY};
+  }, true);
+  const dragEnd = () => { drag = null; };
+  scrollEl.addEventListener('pointerup', dragEnd, true);
+  scrollEl.addEventListener('pointercancel', dragEnd, true);
+
   /* トラックパッドのピンチとCtrl+ホイール */
   scrollEl.addEventListener('wheel', e => {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    zoomAt(z * Math.pow(0.995, e.deltaY), e.clientX, e.clientY);
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      zoomAt(z * Math.pow(0.995, e.deltaY), e.clientX, e.clientY);
+      return;
+    }
+    /* 書き込み中は台紙の上でもホイールで動かせるようにする */
+    if (window.INK && INK.isOn()) {
+      e.preventDefault();
+      scrollEl.scrollLeft += e.deltaX + (e.shiftKey ? e.deltaY : 0);
+      scrollEl.scrollTop  += e.shiftKey ? 0 : e.deltaY;
+    }
   }, {passive:false});
 
   document.addEventListener('keydown', e => {

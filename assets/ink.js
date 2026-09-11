@@ -139,7 +139,7 @@
     /* ペンのお尻（消しゴム側）は消しゴムとして扱う */
     if (e.pointerType === 'pen' && (e.buttons & 32) && tool !== 'eraser') toggleEraser();
     /* ペンを使っている間、指と手のひらは描かない（スクロールに回す） */
-    if (!isPen(e) && (usingPencil() || !allowTouch)) return;
+    if (e.pointerType === 'touch' && (usingPencil() || !allowTouch)) return;
     if (e.pointerType === 'pen' && e.pressure === 0) return;
     const L = activeLayer();
     if (!L || L.locked) return;
@@ -272,6 +272,7 @@
       l.strokes = []; undoStack.length = 0; redoStack.length = 0; save(); redraw();
     },
     setAllowTouch(v) { allowTouch = v; },
+    drawsWithTouch: () => on && allowTouch && !usingPencil(),
     cancelStroke() { drawing = null; activeId = null; redraw(); },
     onPen(fn) { near.push(fn); },
     toggleEraser,
