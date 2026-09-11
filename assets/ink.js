@@ -45,15 +45,19 @@
 
   const canvas = document.createElement('canvas');
   canvas.className = 'inkcanvas';
-  scrollEl.style.position = 'relative';
-  scrollEl.appendChild(canvas);
+  const host = (window.ZOOM && ZOOM.stage) || scrollEl;
+  if (host === scrollEl) scrollEl.style.position = 'relative';
+  host.appendChild(canvas);
   const ctx = canvas.getContext('2d');
+  const zoom = () => (window.ZOOM ? ZOOM.scale : 1);
 
   function sizeCanvas() {
-    const w = Math.max(textEl.scrollWidth, scrollEl.scrollWidth, scrollEl.clientWidth, 1);
-    const h = Math.max(scrollEl.clientHeight, textEl.offsetHeight, 1);
+    const sz = window.ZOOM && ZOOM.size();
+    const w = sz ? sz.w : Math.max(textEl.scrollWidth, scrollEl.clientWidth, 1);
+    const h = sz ? sz.h : Math.max(scrollEl.clientHeight, textEl.offsetHeight, 1);
     if (w < 2 || h < 2) return;          // レイアウト前は測らない
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    /* 拡大時もにじまないよう、倍率のぶんだけ実ピクセルを増やす */
+    const dpr = Math.min((window.devicePixelRatio || 1) * Math.min(zoom(), 3), 4);
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
     canvas.width = Math.round(w * dpr);
@@ -102,12 +106,14 @@
 
   /* ── 入力 ───────────────────────────────────── */
   let drawing = null, pencilSeen = 0, activeId = null;
+  let lastTap = 0, lastTapPt = [0, 0], suppress = false, prevTool = 'pen';
+  const near = [];                     // ペンが近づいたときに呼ぶ
   const isPen = e => e.pointerType === 'pen';
   const usingPencil = () => Date.now() - pencilSeen < 1500;
 
   function pos(e) {
-    const r = canvas.getBoundingClientRect();
-    return [e.clientX - r.left, e.clientY - r.top];
+    const r = canvas.getBoundingClientRect(), k = zoom();
+    return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
   }
   function hit(s, x, y, r) {
     const p = s.p, pad = (s.t === 'marker' ? s.w * 2.5 : s.w) + r;
@@ -120,6 +126,18 @@
   function down(e) {
     if (!on) return;
     if (isPen(e)) pencilSeen = Date.now();
+    /* ペンで素早く二度たたくと消しゴムに切り替える（Apple Pencil のダブルタップの代わり） */
+    if (isPen(e)) {
+      const now = Date.now(), [x0, y0] = pos(e);
+      if (now - lastTap < 340 && Math.hypot(x0 - lastTapPt[0], y0 - lastTapPt[1]) * zoom() < 16) {
+        suppress = true; lastTap = 0;
+        toggleEraser();
+        return;
+      }
+      lastTap = now; lastTapPt = [x0, y0]; suppress = false;
+    }
+    /* ペンのお尻（消しゴム側）は消しゴムとして扱う */
+    if (e.pointerType === 'pen' && (e.buttons & 32) && tool !== 'eraser') toggleEraser();
     /* ペンを使っている間、指と手のひらは描かない（スクロールに回す） */
     if (!isPen(e) && (usingPencil() || !allowTouch)) return;
     if (e.pointerType === 'pen' && e.pressure === 0) return;
@@ -150,6 +168,7 @@
   }
 
   function up(e) {
+    if (suppress) { suppress = false; activeId = null; drawing = null; return; }
     if (e.pointerId !== activeId) return;
     activeId = null;
     drawingErase = false;
@@ -166,6 +185,21 @@
   }
 
   let drawingErase = false, allowTouch = false;
+  function toggleEraser() {
+    if (tool === 'eraser') { tool = prevTool || 'pen'; }
+    else { prevTool = tool; tool = 'eraser'; }
+    drawing = null;
+    near.forEach(fn => fn('tool'));
+  }
+
+  /* ペンが画面に近づいたら知らせる（ホバーに対応した iPad のみ届く） */
+  function penNear(e) {
+    if (e.pointerType !== 'pen') return;
+    pencilSeen = Date.now();
+    near.forEach(fn => fn('near'));
+  }
+  document.addEventListener('pointerover', penNear, true);
+  document.addEventListener('pointermove', e => { if (e.pointerType === 'pen') penNear(e); }, true);
   function erase(x, y) {
     drawingErase = true;
     const L = activeLayer();
@@ -238,6 +272,9 @@
       l.strokes = []; undoStack.length = 0; redoStack.length = 0; save(); redraw();
     },
     setAllowTouch(v) { allowTouch = v; },
+    cancelStroke() { drawing = null; activeId = null; redraw(); },
+    onPen(fn) { near.push(fn); },
+    toggleEraser,
     allowTouch: () => allowTouch,
     count: () => doc.layers.reduce((n, l) => n + l.strokes.length, 0)
   };
@@ -247,6 +284,7 @@
   window.addEventListener('resize', later);
   if (window.ResizeObserver) new ResizeObserver(later).observe(scrollEl);
   document.fonts && document.fonts.ready && document.fonts.ready.then(later);
+  document.addEventListener('zoomchange', () => { sizeCanvas(); });
   sizeCanvas();
   redraw();
 })();

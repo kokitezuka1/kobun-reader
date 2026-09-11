@@ -808,3 +808,17 @@ body[data-ink="on"] .w{cursor:crosshair}
   .inkbar .ib{padding:6px 8px; font-size:11px}
   .inksheet{inset-block-start:76px; inset-block-end:auto}
 }
+
+/* ══ 拡大縮小 ═══════════════════════════════════ */
+#sizer{position:relative}
+#stage{position:absolute; inset-block-start:0; inset-inline-start:0; transform-origin:0 0}
+#scroll[data-zoomed="on"]{overflow-y:auto}
+.zoomlevel{
+  font-size:11px; color:var(--ink-3); min-width:3.4em; text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.ish-note{
+  margin:0; padding:9px 12px 11px; font-size:10.5px; line-height:1.8;
+  color:var(--ink-3); border-block-start:1px dashed var(--rule);
+}
+.ib.zoomlevel{min-width:4.2em; font-variant-numeric:tabular-nums; color:var(--ink-2)}

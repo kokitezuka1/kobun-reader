@@ -29,6 +29,12 @@
       '<div class="grp widths">' + I.WIDTHS.map((w, i) =>
         '<button class="iw' + (I.getWidth() === i ? ' on' : '') + '" data-width="' + i + '">' +
         '<span style="--d:' + Math.max(3, w * 1.7) + 'px"></span></button>').join('') + '</div>' +
+      '<div class="grp zoom">' +
+      '<button class="ib" data-act="zoomout" title="縮小">−</button>' +
+      '<button class="ib zoomlevel" data-act="zoomreset" title="等倍に戻す">' +
+      Math.round((window.ZOOM ? ZOOM.scale : 1) * 100) + '％</button>' +
+      '<button class="ib" data-act="zoomin" title="拡大">＋</button>' +
+      '</div>' +
       '<div class="grp">' +
       '<button class="ib" data-act="undo" title="元に戻す">戻す</button>' +
       '<button class="ib" data-act="redo" title="やり直す">進む</button>' +
@@ -56,9 +62,18 @@
         (d.layers.length > 1 ? '<button class="mini" data-del="' + l.id + '" title="削除">×</button>' : '') +
         '</li>').join('') + '</ul>' +
       '<label class="ish-touch"><input type="checkbox" id="inkTouch"' +
-      (I.allowTouch() ? ' checked' : '') + '> 指でも書く（Apple Pencil を使わないとき）</label>';
+      (I.allowTouch() ? ' checked' : '') + '> 指でも書く（Apple Pencil を使わないとき）</label>' +
+      '<label class="ish-touch"><input type="checkbox" id="inkAuto"' +
+      (autoPen ? ' checked' : '') + '> ペンを近づけたら道具箱を出す</label>' +
+      '<p class="ish-note">ペンで素早く二度たたくと消しゴムに切り替わります。' +
+      '二本指でピンチすると拡大縮小、拡大中は二本指でスクロールできます。</p>';
     const t = sheet.querySelector('#inkTouch');
     if (t) t.onchange = () => I.setAllowTouch(t.checked);
+    const a = sheet.querySelector('#inkAuto');
+    if (a) a.onchange = () => {
+      autoPen = a.checked;
+      try { localStorage.setItem(AUTOKEY, autoPen ? '1' : '0'); } catch (err) {}
+    };
   }
 
   bar.addEventListener('click', e => {
@@ -67,6 +82,9 @@
     if (b.dataset.color !== undefined) { I.setColor(+b.dataset.color); drawBar(); return; }
     if (b.dataset.width !== undefined) { I.setWidth(+b.dataset.width); drawBar(); return; }
     const a = b.dataset.act;
+    if (a === 'zoomin')  { window.ZOOM && ZOOM.zoomIn();  return; }
+    if (a === 'zoomout') { window.ZOOM && ZOOM.zoomOut(); return; }
+    if (a === 'zoomreset') { window.ZOOM && ZOOM.reset();  return; }
     if (a === 'undo') I.undo();
     else if (a === 'redo') I.redo();
     else if (a === 'layers') { sheet.hidden = !sheet.hidden; if (!sheet.hidden) drawSheet(); }
@@ -100,6 +118,10 @@
     if (name) { I.rename(l.id, name.slice(0, 20)); drawSheet(); }
   });
 
+  const AUTOKEY = 'kobun:ink:autopen';
+  let autoPen = true;
+  try { autoPen = localStorage.getItem(AUTOKEY) !== '0'; } catch (e) {}
+
   const btn = document.getElementById('inkBtn');
   function setOn(v) {
     I.setOn(v);
@@ -117,6 +139,13 @@
     }
     if (e.key === 'Escape') setOn(false);
   });
+
+  /* ペンが近づいたら道具箱を出す。ダブルタップで道具が変わったら表示を合わせる */
+  I.onPen(kind => {
+    if (kind === 'tool') { if (!bar.hidden) drawBar(); return; }
+    if (autoPen && !I.isOn()) setOn(true);
+  });
+  document.addEventListener('zoomchange', () => { if (!bar.hidden) drawBar(); });
 
   /* 書き込みがあれば、ひらいたときにボタンへ印を出す */
   if (btn && I.count()) btn.classList.add('has');
