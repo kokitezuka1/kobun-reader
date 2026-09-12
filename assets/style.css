@@ -841,3 +841,8 @@ body[data-pan="on"] #scroll{cursor:grab}
   #printroot .measure{display:none}
   *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
 }
+.pd-range{flex:1; min-width:120px; accent-color:var(--accent); cursor:pointer}
+.pd-val{
+  font-size:11px; color:var(--ink-2); min-width:4em; text-align:end;
+  font-variant-numeric:tabular-nums;
+}

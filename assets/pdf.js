@@ -16,8 +16,7 @@
   };
   const SIZES = {small:{px:11, label:'小'}, mid:{px:13, label:'中'}, large:{px:15.5, label:'大'}};
   /* 字間（文字と文字のあき）と行間（行と行のあき＝縦書きでは列の間隔） */
-  const LS = {tight:{v:'0', label:'詰める'}, normal:{v:'.02em', label:'標準'}, wide:{v:'.12em', label:'広い'}};
-  const LH = {tight:{v:1.6, label:'詰める'}, normal:{v:1.9, label:'標準'}, wide:{v:2.35, label:'ゆったり'}};
+  const LH_PRESET = [['標準', 1.9], ['広め', 2.6], ['メモ用', 3.6], ['たっぷり', 5]];
   const BG = {
     white: {v:'#ffffff', ink:'#111111', label:'白'},
     cream: {v:'#fbf6e9', ink:'#1a1710', label:'生成り'},
@@ -27,7 +26,7 @@
   };
 
   const opt = {
-    paper:'a4-landscape', size:'mid', margin:12, ls:'normal', lh:'normal', bg:'white',
+    paper:'a4-landscape', size:'mid', margin:12, ls:0.02, lh:1.9, bg:'white',
     yaku:false, ruby:KANBUN, color:false, kei:true, haku:KANBUN, spots:false, danbreak:true
   };
 
@@ -83,8 +82,8 @@
                             '; margin:0}';
     r.dataset.color = opt.color ? 'on' : 'off';
     r.style.setProperty('--pfs', SIZES[opt.size].px + 'px');
-    r.style.setProperty('--pls', LS[opt.ls].v);
-    r.style.setProperty('--plh', LH[opt.lh].v);
+    r.style.setProperty('--pls', opt.ls + 'em');
+    r.style.setProperty('--plh', opt.lh);
     r.style.setProperty('--pbg', BG[opt.bg].v);
     r.style.setProperty('--pink', BG[opt.bg].ink);
 
@@ -160,13 +159,15 @@
       [8, 12, 18].map(v => '<button data-margin="' + v + '"' +
         (opt.margin === v ? ' aria-pressed="true"' : '') + '>' + v + 'mm</button>').join('') +
       '</div></div>' +
-      '<div class="pd-row"><span class="pd-lab">字間</span><div class="pd-seg">' +
-      Object.keys(LS).map(k => '<button data-ls="' + k + '"' +
-        (opt.ls === k ? ' aria-pressed="true"' : '') + '>' + LS[k].label + '</button>').join('') +
-      '</div></div>' +
-      '<div class="pd-row"><span class="pd-lab">行間</span><div class="pd-seg">' +
-      Object.keys(LH).map(k => '<button data-lh="' + k + '"' +
-        (opt.lh === k ? ' aria-pressed="true"' : '') + '>' + LH[k].label + '</button>').join('') +
+      '<div class="pd-row"><span class="pd-lab">字間</span>' +
+      '<input class="pd-range" type="range" data-range="ls" min="0" max="0.5" step="0.01" value="' + opt.ls + '">' +
+      '<span class="pd-val" data-val="ls">' + opt.ls.toFixed(2) + 'em</span></div>' +
+      '<div class="pd-row"><span class="pd-lab">行間</span>' +
+      '<input class="pd-range" type="range" data-range="lh" min="1.4" max="7" step="0.1" value="' + opt.lh + '">' +
+      '<span class="pd-val" data-val="lh">' + opt.lh.toFixed(1) + '</span></div>' +
+      '<div class="pd-row"><span class="pd-lab"></span><div class="pd-seg">' +
+      LH_PRESET.map(([lab, v]) => '<button data-lhset="' + v + '"' +
+        (Math.abs(opt.lh - v) < 0.05 ? ' aria-pressed="true"' : '') + '>' + lab + '</button>').join('') +
       '</div></div>' +
       '<div class="pd-row"><span class="pd-lab">背景色</span><div class="pd-seg bgseg">' +
       Object.keys(BG).map(k => '<button data-bg="' + k + '"' +
@@ -195,14 +196,35 @@
 
   function refresh() { drawDlg(build()); }
 
+  /* つまみを動かしている間は組み直しだけして、ダイアログは描き直さない
+     （描き直すとつまみから指が離れてしまうため） */
+  let tid;
+  function refreshPages() {
+    clearTimeout(tid);
+    tid = setTimeout(() => {
+      const n = build();
+      const note = dlg.querySelector('.pd-note b');
+      if (note) note.textContent = n;
+      dlg.querySelectorAll('[data-lhset]').forEach(b =>
+        b.setAttribute('aria-pressed', Math.abs(opt.lh - +b.dataset.lhset) < 0.05));
+    }, 110);
+  }
+  dlg.addEventListener('input', e => {
+    const r = e.target.closest('[data-range]'); if (!r) return;
+    const k = r.dataset.range;
+    opt[k] = +r.value;
+    const out = dlg.querySelector('[data-val="' + k + '"]');
+    if (out) out.textContent = k === 'ls' ? opt.ls.toFixed(2) + 'em' : opt.lh.toFixed(1);
+    refreshPages();
+  });
+
   dlg.addEventListener('click', e => {
     if (e.target === dlg) { close(); return; }
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.paper)  { opt.paper = b.dataset.paper; refresh(); return; }
     if (b.dataset.size)   { opt.size = b.dataset.size; refresh(); return; }
     if (b.dataset.margin) { opt.margin = +b.dataset.margin; refresh(); return; }
-    if (b.dataset.ls) { opt.ls = b.dataset.ls; refresh(); return; }
-    if (b.dataset.lh) { opt.lh = b.dataset.lh; refresh(); return; }
+    if (b.dataset.lhset) { opt.lh = +b.dataset.lhset; refresh(); return; }
     if (b.dataset.bg) { opt.bg = b.dataset.bg; refresh(); return; }
     if (b.dataset.act === 'close') close();
     if (b.dataset.act === 'print') { build(); setTimeout(() => window.print(), 60); }
