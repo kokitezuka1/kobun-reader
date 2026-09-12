@@ -28,6 +28,7 @@
     cards.push({key, s: tk.s, c: tk.c, p: tk.p, g: tk.g || '', m: tk.m,
                 yomi: tk.yomi || '', kei: tk.kei || '', note: tk.note || '', ku: tk.ku || '',
                 imp: !!(tk.ku || tk.kei || tk.note || tk.c === 'aux' || (tk.c === 'n' && tk.yomi)),
+                why: (window.WHY && WHY.explain(dan.t, i)) || '',
                 dan: WK.dan.length > 1 ? '第' + d.n + '段' : (d.n || '本文'),
                 ctx: around(d.t, i)});
   }));
@@ -87,6 +88,7 @@
       '    <span class="mean">' + esc(c.m) + '</span>' +
       (c.g ? '<span class="katsu">' + esc(c.g) + '</span>' : '') +
       (c.kei ? '<span class="keitag">敬語（' + esc(c.kei) + '語）</span>' : '') +
+      (c.why ? '<div class="why">' + c.why + '</div>' : '') +
       (c.note ? '<div class="note">' + c.note + '</div>' : '') +
       '  </div>' +
       '</div>' +
@@ -180,6 +182,7 @@
         (c.yomi ? '（' + esc(c.yomi) + '）' : '') +
         '　' + esc(c.p) + (c.g ? '／' + esc(c.g) : '') +
         (c.ku ? '　<span class="kuinline">句法・' + esc(c.ku) + '</span>' : '') + '　' + esc(c.m) +
+        (c.why ? '<div class="why">' + c.why + '</div>' : '') +
         (c.note ? '<div class="note">' + c.note + '</div>' : '') +
         (window.REF ? REF.conjHtml(c) + REF.lexHtml(c) : '') +
         '<div class="row2"><button class="btn" data-act="next">次へ</button></div>';

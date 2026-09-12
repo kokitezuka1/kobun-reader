@@ -846,3 +846,13 @@ body[data-pan="on"] #scroll{cursor:grab}
   font-size:11px; color:var(--ink-2); min-width:4em; text-align:end;
   font-variant-numeric:tabular-nums;
 }
+
+/* ══ この形になる理由 ════════════════════════════ */
+.why{
+  display:block; font-size:12.5px; line-height:1.85; color:var(--ink-2);
+  background:var(--paper-2); border-inline-start:3px solid var(--c-v);
+  border-radius:0 7px 7px 0; padding:8px 11px; margin-block-start:4px;
+}
+.why b{color:var(--c-v); font-weight:600}
+.row dd .why{margin-block-start:2px}
+.fside .why, .verdict .why{margin-block-start:10px; text-align:start}

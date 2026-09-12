@@ -50,7 +50,7 @@
       el.setAttribute('tabindex', n === 0 ? '0' : '-1');
       el.setAttribute('aria-label', tk.s + '　' + tk.p);
       body.appendChild(el);
-      flat.push({tk, el, dan: dan.n});
+      flat.push({tk, el, dan: dan.n, list: dan.t, idx: i});
     });
     sec.appendChild(body);
     if (dan.k && !KANBUN) sec.appendChild(haku);
@@ -119,6 +119,8 @@
     if (tk.ku) h += '<span class="kutag">句法・' + esc(tk.ku) + '</span>';
     h += '<dl class="row">';
     if (tk.g) h += '<dt>活用・種類</dt><dd>' + esc(tk.g) + '</dd>';
+    const why = window.WHY && WHY.explain(flat[i].list, flat[i].idx);
+    if (why) h += '<dt>この形の理由</dt><dd><span class="why">' + why + '</span></dd>';
     h += '<dt>意味</dt><dd><span class="mean">' + esc(tk.m) + '</span></dd>';
     if (DAN.length > 1) h += '<dt>出典</dt><dd>第' + esc(dan) + '段</dd>';
     h += '</dl>';
