@@ -759,6 +759,11 @@ body[data-pan="on"] #scroll{cursor:grab}
 .pd-seg button[aria-pressed="true"]{
   background:var(--accent-soft); border-color:var(--accent-line); color:var(--accent);
 }
+.pd-seg.bgseg button{display:inline-flex; align-items:center; gap:6px}
+.pd-seg.bgseg i{
+  width:13px; height:13px; border-radius:3px; display:inline-block;
+  box-shadow:0 0 0 1px rgba(128,128,128,.45) inset;
+}
 .pd-checks{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px}
 .pd-checks label{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-2); cursor:pointer}
 .pd-note{
@@ -780,39 +785,44 @@ body[data-pan="on"] #scroll{cursor:grab}
 /* ── 紙面そのもの ── */
 #printroot .measure{
   writing-mode:vertical-rl; text-orientation:mixed;
-  font-family:var(--mincho); font-size:var(--pfs,13px); line-height:1.9; letter-spacing:.02em;
+  font-family:var(--mincho); font-size:var(--pfs,13px);
+  line-height:var(--plh,1.9); letter-spacing:var(--pls,.02em);
   position:absolute; inset-block-start:0; inset-inline-start:0;
   width:max-content;                 /* 縦書きでは width が行数の向き */
 }
-#printroot .pp{box-sizing:border-box; break-after:page; page-break-after:always}
+#printroot .pp{
+  box-sizing:border-box; break-after:page; page-break-after:always;
+  background:var(--pbg,#fff); color:var(--pink,#111);
+}
 #printroot .pp:last-child{break-after:auto; page-break-after:auto}
 #printroot .pp header{
   display:flex; justify-content:space-between; align-items:baseline;
-  font-family:var(--gothic); font-size:8.5pt; color:#666;
+  font-family:var(--gothic); font-size:8.5pt; color:var(--pink,#111); opacity:.6;
   padding-block-end:2mm; margin-block-end:2mm; border-block-end:.4pt solid #bbb;
 }
 #printroot .ppbody{
   writing-mode:vertical-rl; text-orientation:mixed; overflow:hidden;
-  font-family:var(--mincho); font-size:var(--pfs,13px); line-height:1.9; letter-spacing:.02em;
-  color:#111;
+  font-family:var(--mincho); font-size:var(--pfs,13px);
+  line-height:var(--plh,1.9); letter-spacing:var(--pls,.02em);
+  color:var(--pink,#111);
 }
 #printroot .pdan{
-  font-family:var(--gothic); font-size:.62em; letter-spacing:.24em; color:#555;
+  font-family:var(--gothic); font-size:.62em; letter-spacing:.24em; color:var(--pink,#111); opacity:.7;
   border-block-start:1.2pt solid #999; padding-block-start:1.5mm; margin-inline:0 1.5mm;
 }
 #printroot .phaku{
-  font-size:.78em; color:#333; border-block-start:.4pt dotted #999;
+  font-size:.78em; color:var(--pink,#111); opacity:.85; border-block-start:.4pt dotted #999;
   padding-block-start:1.5mm; margin-inline-end:1.5mm;
 }
 #printroot .pyaku{
-  font-size:.72em; color:#555; border-block-start:.4pt dashed #aaa;
+  font-size:.72em; color:var(--pink,#111); opacity:.72; border-block-start:.4pt dashed #aaa;
   padding-block-start:1.5mm; margin-inline-end:1.5mm; line-height:1.8;
 }
 #printroot .kei{-webkit-text-emphasis:sesame #b03a50; text-emphasis:sesame #b03a50;
   -webkit-text-emphasis-position:over right; text-emphasis-position:over right}
 #printroot .mark{text-decoration:underline; text-decoration-color:#c08a1e; text-underline-offset:.28em}
-#printroot rt{font-family:var(--gothic); font-size:.4em; color:#666; letter-spacing:0}
-#printroot .pn{color:#555}
+#printroot rt{font-family:var(--gothic); font-size:.4em; color:var(--pink,#111); opacity:.65; letter-spacing:0}
+#printroot .pn{color:var(--pink,#111); opacity:.6}
 #printroot[data-color="on"] .t.v{color:#1f5e8c}
 #printroot[data-color="on"] .t.adj{color:#3b6b4e}
 #printroot[data-color="on"] .t.aux{color:#8a3e76}
@@ -821,7 +831,7 @@ body[data-pan="on"] #scroll{cursor:grab}
 
 @media print{
   html, body{height:auto !important; overflow:visible !important; background:#fff !important}
-  body{display:block !important}
+  body{display:block !important; margin:0 !important}
   body > *{display:none !important}
   body > #printroot{
     display:block !important; position:static !important;

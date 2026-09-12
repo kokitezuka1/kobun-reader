@@ -15,10 +15,20 @@
     'b5-portrait':  {w:182, h:257, label:'B5 縦'}
   };
   const SIZES = {small:{px:11, label:'小'}, mid:{px:13, label:'中'}, large:{px:15.5, label:'大'}};
+  /* 字間（文字と文字のあき）と行間（行と行のあき＝縦書きでは列の間隔） */
+  const LS = {tight:{v:'0', label:'詰める'}, normal:{v:'.02em', label:'標準'}, wide:{v:'.12em', label:'広い'}};
+  const LH = {tight:{v:1.6, label:'詰める'}, normal:{v:1.9, label:'標準'}, wide:{v:2.35, label:'ゆったり'}};
+  const BG = {
+    white: {v:'#ffffff', ink:'#111111', label:'白'},
+    cream: {v:'#fbf6e9', ink:'#1a1710', label:'生成り'},
+    sepia: {v:'#f3e7d3', ink:'#2b2114', label:'セピア'},
+    gray:  {v:'#eceef0', ink:'#15191d', label:'薄グレー'},
+    dark:  {v:'#1b2026', ink:'#e8edf1', label:'濃紺'}
+  };
 
   const opt = {
-    paper:'a4-landscape', size:'mid', margin:12,
-    yaku:false, ruby:KANBUN, color:false, kei:true, haku:KANBUN, spots:false
+    paper:'a4-landscape', size:'mid', margin:12, ls:'normal', lh:'normal', bg:'white',
+    yaku:false, ruby:KANBUN, color:false, kei:true, haku:KANBUN, spots:false, danbreak:true
   };
 
   /* ── 印刷用の紙面を組む ───────────────────────── */
@@ -47,13 +57,15 @@
   }
 
   function contentHtml() {
+    const br = opt.danbreak ? '<br class="pbr">' : '';
     let h = '';
-    WORK.dan.forEach(dan => {
+    WORK.dan.forEach((dan, i) => {
       const label = WORK.dan.length > 1 ? '第' + dan.n + '段' : (dan.n || '本文');
+      if (i) h += br;
       h += '<span class="pdan">' + esc(label) + '</span>';
-      if (opt.haku && dan.k) h += '<span class="phaku">［白文］' + esc(dan.k) + '</span>';
+      if (opt.haku && dan.k) h += br + '<span class="phaku">［白文］' + esc(dan.k) + '</span>' + br;
       h += dan.t.map(tokenHtml).join('');
-      if (opt.yaku) h += '<span class="pyaku">〈訳〉' + esc(dan.y) + '</span>';
+      if (opt.yaku) h += br + '<span class="pyaku">〈訳〉' + esc(dan.y) + '</span>';
     });
     return h;
   }
@@ -66,10 +78,15 @@
     const headH = 7 * MM;
     const pageH = (paper.h - m * 2) * MM - headH;
 
+    /* 余白は紙面側で取る。こうすると背景色が紙のすみずみまで届く */
     pageStyle.textContent = '@page{size:' + opt.paper.replace('-', ' ').replace('a4', 'A4').replace('b5', 'B5') +
-                            '; margin:' + m + 'mm}';
+                            '; margin:0}';
     r.dataset.color = opt.color ? 'on' : 'off';
     r.style.setProperty('--pfs', SIZES[opt.size].px + 'px');
+    r.style.setProperty('--pls', LS[opt.ls].v);
+    r.style.setProperty('--plh', LH[opt.lh].v);
+    r.style.setProperty('--pbg', BG[opt.bg].v);
+    r.style.setProperty('--pink', BG[opt.bg].ink);
 
     /* まず一続きに流して、どこで紙が変わるかを測る */
     r.innerHTML = '<div class="measure" style="height:' + pageH + 'px">' + contentHtml() + '</div>';
@@ -95,11 +112,14 @@
     pages.forEach((els, i) => {
       const pp = document.createElement('section');
       pp.className = 'pp';
-      pp.style.width = pageW + 'px';
+      pp.style.width  = paper.w * MM + 'px';
+      pp.style.height = paper.h * MM + 'px';
+      pp.style.padding = m + 'mm';
       pp.innerHTML = '<header><span>' + head + '</span><span class="pno">' +
                      (i + 1) + ' / ' + pages.length + '</span></header>' +
                      '<div class="ppbody" style="height:' + pageH + 'px"></div>';
       const body = pp.lastChild;
+      while (els.length && els[0].tagName === 'BR') els.shift();   // 行頭の空き行は落とす
       els.forEach(el => body.appendChild(el));
       frag.appendChild(pp);
     });
@@ -140,7 +160,22 @@
       [8, 12, 18].map(v => '<button data-margin="' + v + '"' +
         (opt.margin === v ? ' aria-pressed="true"' : '') + '>' + v + 'mm</button>').join('') +
       '</div></div>' +
+      '<div class="pd-row"><span class="pd-lab">字間</span><div class="pd-seg">' +
+      Object.keys(LS).map(k => '<button data-ls="' + k + '"' +
+        (opt.ls === k ? ' aria-pressed="true"' : '') + '>' + LS[k].label + '</button>').join('') +
+      '</div></div>' +
+      '<div class="pd-row"><span class="pd-lab">行間</span><div class="pd-seg">' +
+      Object.keys(LH).map(k => '<button data-lh="' + k + '"' +
+        (opt.lh === k ? ' aria-pressed="true"' : '') + '>' + LH[k].label + '</button>').join('') +
+      '</div></div>' +
+      '<div class="pd-row"><span class="pd-lab">背景色</span><div class="pd-seg bgseg">' +
+      Object.keys(BG).map(k => '<button data-bg="' + k + '"' +
+        (opt.bg === k ? ' aria-pressed="true"' : '') + '><i style="background:' + BG[k].v +
+        '"></i>' + BG[k].label + '</button>').join('') +
+      '</div></div>' +
       '<ul class="pd-checks">' +
+      '<li><label><input type="checkbox" data-opt="danbreak"' + (opt.danbreak ? ' checked' : '') +
+      '> 段ごとに行を改める</label></li>' +
       CHECKS.map(([k, lab]) => '<li><label><input type="checkbox" data-opt="' + k + '"' +
         (opt[k] ? ' checked' : '') + '> ' + lab + '</label></li>').join('') +
       (WORK.dan.some(d => d.k)
@@ -151,7 +186,9 @@
       '字は画像ではなく文字のまま入るので、拡大してもぼけず、PDF の中を検索できます。</p>' +
       '</div>' +
       '<div class="pd-foot">' +
-      '<span class="pd-hint">保存先のダイアログで「PDFとして保存」を選んでください。</span>' +
+      '<span class="pd-hint">保存先のダイアログで「PDFとして保存」を選んでください。' +
+      (opt.bg === 'white' ? '' : '背景色を出すには印刷設定の「背景のグラフィック」を入れてください。') +
+      '</span>' +
       '<button class="btnp" data-act="print">書き出す</button></div>' +
       '</div>';
   }
@@ -164,6 +201,9 @@
     if (b.dataset.paper)  { opt.paper = b.dataset.paper; refresh(); return; }
     if (b.dataset.size)   { opt.size = b.dataset.size; refresh(); return; }
     if (b.dataset.margin) { opt.margin = +b.dataset.margin; refresh(); return; }
+    if (b.dataset.ls) { opt.ls = b.dataset.ls; refresh(); return; }
+    if (b.dataset.lh) { opt.lh = b.dataset.lh; refresh(); return; }
+    if (b.dataset.bg) { opt.bg = b.dataset.bg; refresh(); return; }
     if (b.dataset.act === 'close') close();
     if (b.dataset.act === 'print') { build(); setTimeout(() => window.print(), 60); }
   });
