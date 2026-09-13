@@ -28,7 +28,7 @@
     cards.push({key, s: tk.s, c: tk.c, p: tk.p, g: tk.g || '', m: tk.m,
                 yomi: tk.yomi || '', kei: tk.kei || '', note: tk.note || '', ku: tk.ku || '',
                 imp: !!(tk.ku || tk.kei || tk.note || tk.c === 'aux' || (tk.c === 'n' && tk.yomi)),
-                why: (window.WHY && WHY.explain(dan.t, i)) || '',
+                why: (window.WHY && WHY.explain(d.t, i)) || '',
                 dan: WK.dan.length > 1 ? '第' + d.n + '段' : (d.n || '本文'),
                 ctx: around(d.t, i)});
   }));
